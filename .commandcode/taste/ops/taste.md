@@ -15,7 +15,10 @@
 - For irreversible or outward-facing actions (pushing to production, creating a *public*
   remote, publishing a repo), present concrete copy-pasteable options and stop for a
   decision. The user answers by picking an option rather than by typing instructions, and
-  chose the reversible option in both cases. Confidence: 0.65
+  chose the reversible option in both cases. A bare option number ("2") is the entire
+  instruction — when the picked option includes push + deploy, that is authorization for
+  the whole path and the sequence runs to completion without a second confirmation.
+  Confidence: 0.7
 - A single combined instruction ("commit & deploy", misspelled, one line) is authorization
   for the *whole* path — do not re-present options or pause for a second confirmation once
   told to deploy. The correct response to the confirmation reflex is to make the steps
@@ -74,6 +77,15 @@
   revert point before a dirty-repo test is reported as not belonging in history, and the
   agent offers to squash it (with a backup on the VPS before the rebase) rather than
   pushing it or hiding it. Clean history is preferred over a fast push. Confidence: 0.55
+- When the user picks the squash option, take a recoverable checkpoint *first*
+  (`git tag backup-before-rebase-<timestamp>`), inspect both commits to confirm they
+  touch the same files, then `git reset --soft HEAD~2` and recommit reusing the real
+  message verbatim. Delete the safety tag only after the push and deploy are verified —
+  the tag is scaffolding too, and leaving it is the same class of litter as the `wip:`
+  commit it replaced. Confidence: 0.5
+- Re-run the test suite after a history rewrite before pushing, even though no file
+  content changed — it confirms the squash lost nothing, and the test's repo-dirtying
+  side effects have to be reverted again before the push. Confidence: 0.5
 - Repo hygiene covers the *agent's own* commits, not just the pre-existing mess: anything
   the agent created while working is expected to be cleaned up before handing back, and
   named explicitly when it isn't. Confidence: 0.55
@@ -97,3 +109,8 @@
   route's `%{http_code}` (the full set, not just the changed page) → check the search-index
   asset still 200s → confirm the new page's content is actually present in the served HTML.
   Confidence: 0.5
+- When the change is a *computed style*, the HTTP status codes are not enough — a route can
+  return 200 with the styling silently absent. Confirm via headless Chrome on the live
+  domain that `getComputedStyle` reports the actual `background-image` and
+  `background-clip: text`, and capture a clipped screenshot of the element to read back.
+  Confirming the new hashed CSS asset is served is necessary but not sufficient. Confidence: 0.5

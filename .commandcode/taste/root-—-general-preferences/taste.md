@@ -1,6 +1,9 @@
 # Root — general preferences
-- Writes prompts in Vietnamese, typed without diacritics (ASCII-only, e.g. "giao diện docs yêu cầu hiện đại đẹp 2026"). Treat it as Vietnamese intent. Confidence: 0.75
+- Writes prompts in Vietnamese, usually typed without diacritics (e.g. "giao diện docs yêu cầu hiện đại đẹp 2026"), though diacritics do appear sometimes ("/mcp hướng dẫn cách dùng"). Treat it as Vietnamese intent either way. Confidence: 0.65
+- Thinks in terms of the CLI's slash-command surface ("/mcp") and may type a command as if it were a message. When that happens, don't just echo the menu — verify the underlying state and answer the real question behind it, in the user's language. Confidence: 0.5
+- Asks "how do I use this" in a few words, and expects a complete written guide back: numbered setup steps, a table of every option with when to use it, and the gotchas that bite. One well-structured answer, no follow-up questions. Confidence: 0.55
 - Gives extremely terse, one-line briefs and expects the agent to make the design/architecture calls autonomously rather than asking clarifying questions first. Confidence: 0.75
+- Replies to a numbered list of options with just the number ("2"). A bare digit selecting from your own list is a complete instruction — treat it as full authorization for everything that option said, and carry it out end to end without echoing the choice back or re-confirming. Confidence: 0.6
 - Follow-ups are terse status checks ("done chưa ?") rather than new instructions. Read them as "give me the state of the work", so a good reply states what is done, what is not, and where things stand in the repo (committed / pushed / deployed) rather than re-explaining the plan. Confidence: 0.65
 - Frames requests around a desired *outcome and mood* ("modern, beautiful, 2026") rather than implementation detail; the agent is expected to derive the concrete spec. Confidence: 0.55
 - Confirms understanding tersely and moves on ("Rõ rồi", "ftech nội dung" → "tạo docs cho từng model"). Treat a short affirmative as approval to proceed, not as a request for more detail. Confidence: 0.55

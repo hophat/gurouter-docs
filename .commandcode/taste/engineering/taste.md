@@ -117,6 +117,21 @@
   mid-tone colors lose signal on a near-black field, so every stop was stepped *up* in
   lightness and re-checked against the darkest surface in the theme. Confidence: 0.45
 
+## Configuration portability
+
+- Never write a machine-specific absolute path into a committed config file. Switching
+  `.mcp.json` to `/Users/macbookpro/.../scripts/docs-mcp.ts` did make the server runnable
+  from any cwd, and was still reverted: the path belongs to one laptop and breaks every
+  clone. Relative paths are the correct form for project-scoped config; the session cwd is
+  the client's contract. Confidence: 0.55
+- Test a config from the directory it is supposed to fail in before "hardening" it. Running
+  the stdio server from `/tmp` showed both candidate forms behaved as designed, and the
+  committed relative form was already correct — the change was churn, so revert rather than
+  ship a rewrite that fixes nothing. Confidence: 0.5
+- Say out loud when you tried something and backed it out, with the reason, at the end of the
+  report ("I switched it to an absolute path, then reverted — that would put your `/Users/...`
+  into the repo"). The user accepted it without comment. Confidence: 0.45
+
 ## Getting data out of a live system
 
 - `web_fetch` on a client-rendered SPA returns an empty shell — the page body has no content
