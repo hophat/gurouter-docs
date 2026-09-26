@@ -16,6 +16,12 @@
   remote, publishing a repo), present concrete copy-pasteable options and stop for a
   decision. The user answers by picking an option rather than by typing instructions, and
   chose the reversible option in both cases. Confidence: 0.65
+- A single combined instruction ("commit & deploy", misspelled, one line) is authorization
+  for the *whole* path — do not re-present options or pause for a second confirmation once
+  told to deploy. The correct response to the confirmation reflex is to make the steps
+  safe by default instead (timestamped backup, clean-tree check, build, route + live-DOM
+  verification) and report the evidence afterwards. The user asked for the irreversible
+  part up front and the full sequence ran to completion without objection. Confidence: 0.6
 - When a plan hits a genuine blocker mid-flight (no git repo, the configured remote returns
   "Repository not found"), surface it rather than improvising a workaround. No pushback on
   being stopped. Confidence: 0.6
@@ -41,4 +47,6 @@
   into `dist/`) are removed and `git status` confirmed clean before finishing, rather than
   left for the next commit to sweep up. Recurred across both deploy cycles. Confidence: 0.55
 - Running a dev/preview server for a screenshot is a legitimate step, but it gets stopped
+  afterwards — no stray processes left behind. Confidence: 0.5
+ed
   afterwards — no stray processes left behind. Confidence: 0.5

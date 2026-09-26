@@ -30,6 +30,10 @@ const ROUTES: Record<string, { method: string; path: string; state: 'live' | 'pl
 		{ method: 'POST', path: '/v1/chat/completions', state: 'live' },
 	],
 	'/api/systemone/': [{ method: 'POST', path: '/v1/systemone', state: 'live' }],
+	'/models/': [
+		{ method: 'POST', path: '/v1/chat/completions', state: 'live' },
+		{ method: 'POST', path: '/v1/messages', state: 'live' },
+	],
 	'/harness/': [{ method: 'SOON', path: 'No routes published', state: 'planned' }],
 };
 

@@ -1,0 +1,701 @@
+---
+/**
+ * ModelTable — the catalog as a comparison surface.
+ *
+ * Forty models judged against each other is a compare job, so this is a table with
+ * stable scanning lanes, sortable columns and filters, not a card grid.
+ *
+ * Rendered server-side first so the catalog is in the static HTML for search and for
+ * readers without JS; the script then only reorders and hides rows. Nothing is
+ * fetched at runtime.
+ *
+ * The price shown is *effective* for the selected group, not the base rate. That
+ * distinction is the whole point: the charge is `base x group_ratio`, so a single
+ * number per model would be a lie for anyone not on that group's plan.
+ */
+import catalog from '../data/models.json';
+
+type Model = (typeof catalog.models)[number];
+type GroupId = keyof typeof catalog.groupRatio;
+
+const models = catalog.models as Model[];
+const groupIds = Object.keys(catalog.groupRatio) as GroupId[];
+const groupLabels = catalog.groups as Record<GroupId, string>;
+const endpoints = catalog.endpoints as Record<
+	string,
+	{ path: string; method: string }
+>;
+
+const vendors = [...new Set(models.map((m) => m.vendor))].sort();
+const endpointTypes = [...new Set(models.flatMap((m) => m.endpoints))].sort();
+
+/**
+ * A null base is "the vendor publishes no rate for this class", which is a different
+ * claim from zero. Showing Free for it would advertise a model as costing nothing.
+ */
+function usd(n: number | null): string {
+	if (n === null) return 'n/a';
+	if (n === 0) return 'Free';
+	if (n < 0.1) return `$${n.toFixed(3)}`;
+	return `$${n.toFixed(2)}`;
+}
+
+function isFree(m: Model): boolean {
+	return m.base.input === 0;
+}
+---
+
+<div class="mt" data-model-table>
+	<div class="mt-bar">
+		<div class="mt-field">
+			<label class="mt-label" for="mt-search">Find a model</label>
+			<input
+				class="mt-input"
+				id="mt-search"
+				type="search"
+				placeholder="deepseek, qwen, gpt…"
+				autocomplete="off"
+				spellcheck="false"
+			/>
+		</div>
+
+		<div class="mt-field">
+			<label class="mt-label" for="mt-vendor">Vendor</label>
+			<div class="mt-select-wrap">
+				<select class="mt-select" id="mt-vendor">
+					<option value="">All vendors</option>
+					{vendors.map((v) => <option value={v}>{v}</option>)}
+				</select>
+			</div>
+		</div>
+
+		<div class="mt-field">
+			<label class="mt-label" for="mt-endpoint">Endpoint</label>
+			<div class="mt-select-wrap">
+				<select class="mt-select" id="mt-endpoint">
+					<option value="">Any endpoint</option>
+					{endpointTypes.map((e) => (
+						<option value={e}>{e} — {endpoints[e]?.path}</option>
+					))}
+				</select>
+			</div>
+		</div>
+	</div>
+
+	{/*
+		Prices depend on the reader's plan, so the reader picks their group and the
+		rates recompute. This is a radio group, not a list of buttons: exactly one
+		choice, and the native control brings the keyboard behaviour for free.
+	*/}
+	<fieldset class="mt-group">
+		<legend class="mt-label">Your plan</legend>
+		<div class="mt-chips">
+			{
+				groupIds.map((g, i) => (
+					<label class="mt-chip">
+						<input
+							type="radio"
+							name="mt-group"
+							value={g}
+							checked={i === 0 ? true : undefined}
+						/>
+						<span class="mt-chip-label">{groupLabels[g]}</span>
+						<span class="mt-chip-mult" data-mult={catalog.groupRatio[g]}>
+							{catalog.groupRatio[g] < 1
+								? `−${Math.round((1 - catalog.groupRatio[g]) * 100)}%`
+								: 'base'}
+						</span>
+					</label>
+				))
+			}
+		</div>
+		<p
+			class="mt-group-note"
+			data-role="group-note"
+			data-ratios={JSON.stringify(catalog.groupRatio)}
+		></p>
+	</fieldset>
+
+	<p class="mt-status" data-role="status" role="status" aria-live="polite">
+		Showing all {models.length} models
+	</p>
+
+	<div class="mt-scroll">
+		<table class="mt-table">
+			<caption class="mt-sr">
+				GuRouter models with effective price per 1M tokens for the selected plan,
+				supported endpoints, published quality score and speed, and the plans each
+				model is available on
+			</caption>
+			{/*
+				`table-layout: fixed` makes the browser honour these widths instead of
+				guessing from content. Widths are set with the HTML `width` attribute
+				rather than a class: Astro's scoped styles do not attach to `<col>`, so a
+				class here would compile to a selector that matches nothing.
+			*/}
+			<colgroup>
+				<col width="17rem" />
+				<col width="6.5rem" />
+				<col width="7rem" />
+				<col width="4.75rem" />
+				<col width="4.75rem" />
+				<col width="4.75rem" />
+			</colgroup>
+			<thead>
+				<tr>
+					<th scope="col" data-sort="id" aria-sort="none">
+						<button type="button">Model</button>
+					</th>
+					<th scope="col" data-sort="vendor" aria-sort="none">
+						<button type="button">Vendor</button>
+					</th>
+					<th scope="col" data-sort="endpoints" aria-sort="none">
+						<button type="button">Endpoint</button>
+					</th>
+					<th scope="col" data-sort="input" aria-sort="none">
+						<button type="button">Input</button>
+					</th>
+					<th scope="col" data-sort="output" aria-sort="none">
+						<button type="button">Output</button>
+					</th>
+					<th scope="col" data-sort="cache" aria-sort="none">
+						<button type="button">Cache</button>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					models.map((m) => (
+						<tr
+							data-id={m.id.toLowerCase()}
+							data-vendor={m.vendor}
+							data-endpoints={m.endpoints.join(' ')}
+							data-base-input={m.base.input}
+							data-base-output={m.base.output}
+							data-base-cache={m.base.cacheRead}
+							data-score={m.score ?? ''}
+							data-speed={m.speed ?? ''}
+							data-groups={m.groups.join(' ')}
+						>
+							<th scope="row" class="mt-th-model">
+								<code class="mt-id">{m.id}</code>
+								{m.description && <span class="mt-desc">{m.description}</span>}
+								<span class="mt-metrics">
+									{m.score !== null && <span>Score {m.score}</span>}
+									{m.speed !== null && <span>{m.speed} tok/s</span>}
+								</span>
+								{isFree(m) && <span class="mt-free">Free</span>}
+							</th>
+							<td data-vendor-cell>{m.vendor}</td>
+							<td>
+								<span class="mt-eps">
+									{m.endpoints.map((e) => (
+										<code class="mt-ep">{e}</code>
+									))}
+								</span>
+							</td>
+							<td class="mt-price" data-price="input" data-base={m.base.input}>
+								{usd(m.base.input)}
+							</td>
+							<td class="mt-price" data-price="output" data-base={m.base.output ?? ''}>
+								{usd(m.base.output)}
+							</td>
+							<td class="mt-price" data-price="cache" data-base={m.base.cacheRead ?? ''}>
+								{usd(m.base.cacheRead)}
+							</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+
+	<p class="mt-empty" data-role="empty" hidden>
+		No model matches those filters. Clear the search or pick a different vendor.
+	</p>
+
+	<p class="mt-foot">
+		Rates are per 1M tokens, in USD, and are the effective rate for the plan you
+		selected above. Scores and speeds are as published by the gateway; a dash means
+		the vendor has not published one. Last synced
+		<time datetime={catalog.fetchedAt}>
+			{new Date(catalog.fetchedAt).toLocaleDateString('en-GB', {
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric',
+			})}
+		</time>
+		— see <a href="#how-pricing-is-calculated">how this is calculated</a>.
+	</p>
+</div>
+
+<script>
+	// Prices, filtering and sorting are all derived from data already in the DOM, so
+	// this needs no fetch and no bundled state.
+	const root = document.querySelector('[data-model-table]');
+	if (root) {
+		const body = root.querySelector('tbody')!;
+		const rows = Array.from(body.querySelectorAll('tr'));
+		const status = root.querySelector<HTMLElement>('[data-role="status"]')!;
+		const empty = root.querySelector<HTMLElement>('[data-role="empty"]')!;
+		const groupNote = root.querySelector<HTMLElement>('[data-role="group-note"]')!;
+		const search = root.querySelector<HTMLInputElement>('#mt-search')!;
+		const vendor = root.querySelector<HTMLSelectElement>('#mt-vendor')!;
+		const endpoint = root.querySelector<HTMLSelectElement>('#mt-endpoint')!;
+
+		let group = (root.querySelector<HTMLInputElement>('input[name="mt-group"]:checked')?.value ??
+			'pro') as string;
+		let sortKey = 'id';
+		let sortDir: 'asc' | 'desc' = 'asc';
+
+		const GROUP_RATIO: Record<string, number> = JSON.parse(
+			root.querySelector('[data-role="group-note"]')?.dataset.ratios || '{}'
+		);
+
+		function fmt(n: number | null): string {
+			if (n === null) return 'n/a';
+			if (n === 0) return 'Free';
+			if (n < 0.1) return `$${n.toFixed(3)}`;
+			return `$${n.toFixed(2)}`;
+		}
+
+		/** Recompute price and availability from the selected plan. */
+		function applyGroup() {
+			const ratio = GROUP_RATIO[group] ?? 1;
+			for (const row of rows) {
+				for (const cell of row.querySelectorAll<HTMLElement>('[data-price]')) {
+					const raw = cell.dataset.base;
+					// A missing rate stays missing; it must not become $0.00 when a
+					// plan multiplier is applied.
+					const base = raw === '' || raw === undefined ? null : Number(raw);
+					cell.textContent =
+						base === null ? 'n/a' : fmt(Math.round(base * ratio * 1e6) / 1e6);
+				}
+				// Availability is per plan, not a fixed property, so it is re-derived
+				// here rather than baked into the markup.
+				const groups = (row.getAttribute('data-groups') || '').split(' ');
+				row.classList.toggle('mt-locked', !groups.includes(group));
+			}
+		}
+
+		function matches(row: Element): boolean {
+			const q = search.value.trim().toLowerCase();
+			if (q && !row.getAttribute('data-id')!.includes(q)) return false;
+			if (vendor.value && row.getAttribute('data-vendor') !== vendor.value) return false;
+			const ep = endpoint.value;
+			if (ep && !row.getAttribute('data-endpoints')!.split(' ').includes(ep)) return false;
+			return true;
+		}
+
+		function compare(a: Element, b: Element): number {
+			const get = (r: Element, k: string): number | string => {
+				if (k === 'input' || k === 'output' || k === 'cache') {
+					const v = r.getAttribute(`data-base-${k}`);
+					// A model with no published rate for this class sorts last rather
+					// than pretending to be the cheapest thing in the table.
+					return v === '' || v === null ? -1 : Number(v);
+				}
+				return (r.getAttribute(`data-${k}`) || '').toLowerCase();
+			};
+
+			const av = get(a, sortKey);
+			const bv = get(b, sortKey);
+			if (typeof av === 'number' && typeof bv === 'number') return av - bv;
+			return String(av).localeCompare(String(bv));
+		}
+
+		function render() {
+			const visible = rows.filter(matches);
+			visible.sort(compare);
+			if (sortDir === 'desc') visible.reverse();
+			for (const row of rows) row.remove();
+			for (const row of visible) body.appendChild(row);
+
+			empty.hidden = visible.length > 0;
+			const locked = visible.filter(
+				(r) => !(r.getAttribute('data-groups') || '').split(' ').includes(group)
+			).length;
+			status.textContent =
+				`Showing ${visible.length} of ${rows.length} models` +
+				(locked ? ` · ${locked} not available on your plan` : '');
+		}
+
+		search.addEventListener('input', render);
+		vendor.addEventListener('change', render);
+		endpoint.addEventListener('change', render);
+
+		for (const input of root.querySelectorAll<HTMLInputElement>('input[name="mt-group"]')) {
+			input.addEventListener('change', () => {
+				group = input.value;
+				// Changing plan changes both the prices and which models are reachable,
+				// so the availability line has to be recomputed too, not just the cells.
+				applyGroup();
+				groupNote.textContent = `Prices shown are effective for the ${input
+					.closest('label')!
+					.querySelector('.mt-chip-label')!.textContent} plan.`;
+				render();
+			});
+		}
+
+		for (const th of root.querySelectorAll<HTMLTableCellElement>('th[data-sort]')) {
+			th.querySelector('button')!.addEventListener('click', () => {
+				const key = th.dataset.sort!;
+				if (sortKey === key) {
+					sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+				} else {
+					sortKey = key;
+					sortDir = 'asc';
+				}
+				for (const other of root.querySelectorAll('th[data-sort]')) {
+					other.setAttribute('aria-sort', other === th ? sortDir : 'none');
+				}
+				render();
+			});
+		}
+
+		applyGroup();
+		groupNote.textContent = `Prices shown are effective for the ${
+			root.querySelector('.mt-chip-label')!.textContent
+		} plan.`;
+		render();
+	}
+</script>
+
+<style>
+	.mt {
+		--mt-line: var(--gr-border);
+		margin-block: var(--gr-space-6) var(--gr-space-9);
+	}
+
+	/* --- controls --- */
+	.mt-bar {
+		display: grid;
+		gap: 0.75rem;
+		grid-template-columns: 1fr;
+	}
+	@media (min-width: 40rem) {
+		.mt-bar {
+			grid-template-columns: 1.4fr 1fr 1fr;
+		}
+	}
+
+	.mt-field {
+		display: grid;
+		gap: 0.3rem;
+		min-width: 0;
+	}
+	.mt-label {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--gr-text-4);
+	}
+
+	.mt-input,
+	.mt-select {
+		width: 100%;
+		min-height: 2.75rem;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-sm);
+		background: var(--gr-surface-2);
+		font-family: inherit;
+		font-size: 0.875rem;
+		color: var(--gr-text-1);
+		transition: border-color var(--gr-dur) var(--gr-ease);
+	}
+	.mt-input::placeholder {
+		color: var(--gr-text-4);
+	}
+	.mt-input:hover,
+	.mt-select:hover {
+		border-color: var(--gr-border-strong);
+	}
+	.mt-input:focus-visible,
+	.mt-select:focus-visible {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: 1px;
+		border-color: transparent;
+	}
+	.mt-select {
+		appearance: none;
+		padding-inline-end: 2rem;
+		background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+			linear-gradient(135deg, currentColor 50%, transparent 50%);
+		background-position:
+			calc(100% - 1rem) calc(50% + 1px),
+			calc(100% - 0.7rem) calc(50% + 1px);
+		background-size: 5px 5px;
+		background-repeat: no-repeat;
+		cursor: pointer;
+	}
+
+	/* --- plan selector --- */
+	.mt-group {
+		margin: 1.25rem 0 0;
+		padding: 0;
+		border: 0;
+	}
+	.mt-group legend {
+		padding: 0;
+		margin-block-end: 0.45rem;
+	}
+	.mt-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	.mt-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.4rem 0.7rem;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-pill);
+		background: var(--gr-surface-1);
+		font-size: 0.8125rem;
+		cursor: pointer;
+		transition:
+			border-color var(--gr-dur) var(--gr-ease),
+			background-color var(--gr-dur) var(--gr-ease);
+	}
+	.mt-chip:hover {
+		border-color: var(--gr-border-strong);
+		background: var(--gr-surface-2);
+	}
+	.mt-chip input {
+		/* The radio stays in the accessibility tree and keeps native keyboard
+		   behaviour; only its painted box is replaced by the chip. */
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+	.mt-chip:has(input:checked) {
+		border-color: var(--gr-accent);
+		background: var(--gr-accent-soft);
+	}
+	.mt-chip:has(input:checked) .mt-chip-label {
+		color: var(--gr-accent-text);
+		font-weight: 600;
+	}
+	.mt-chip:has(input:focus-visible) {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: 2px;
+	}
+	.mt-chip-label {
+		color: var(--gr-text-1);
+	}
+	.mt-chip-mult {
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		color: var(--gr-text-3);
+	}
+	.mt-chip:has(input:checked) .mt-chip-mult {
+		color: var(--gr-accent-text);
+	}
+	.mt-group-note {
+		margin: 0.6rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--gr-text-3);
+	}
+
+	.mt-status {
+		margin: 1.25rem 0 0.5rem;
+		font-family: var(--gr-mono);
+		font-size: 0.75rem;
+		color: var(--gr-text-3);
+	}
+
+	/* --- table --- */
+	.mt-scroll {
+		position: relative;
+		overflow-x: auto;
+		border: 1px solid var(--mt-line);
+		border-radius: var(--gr-radius-md);
+		-webkit-overflow-scrolling: touch;
+	}
+	/*
+	 * Astro's scoped-style strategy compiles `.mt-table` to `.mt-table:where(.x)`,
+	 * which has zero specificity, so the prose rule `table { display: block }` in
+	 * custom.css wins. `:global()` with a compound selector raises it above that.
+	 */
+	:global(.mt-scroll) :global(.mt-table) {
+		display: table;
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.8125rem;
+		min-width: 44.75rem;
+		/* With a colgroup declaring the widths, the browser stops guessing from
+		   content and the numeric columns stay where their headers sit. */
+		table-layout: fixed;
+	}
+	.mt-table th,
+	.mt-table td {
+		padding: 0.5rem 0.65rem;
+		text-align: start;
+		border-bottom: 1px solid var(--mt-line);
+		vertical-align: top;
+	}
+	.mt-table thead th {
+		padding: 0;
+		background: var(--gr-surface-2);
+		border-bottom: 1px solid var(--gr-border-strong);
+	}
+	.mt-table thead th button {
+		/* The header sticks rather than the cell. `position: sticky` on a `th` opts
+		   the table out of `table-layout: fixed`, which is the thing keeping the
+		   numeric columns aligned; on the button it costs nothing. */
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		width: 100%;
+		padding: 0.6rem 0.65rem;
+		border: 0;
+		background: var(--gr-surface-2);
+		font-family: var(--gr-mono);
+		font-size: 0.625rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-align: start;
+		white-space: nowrap;
+		color: var(--gr-text-3);
+		cursor: pointer;
+		transition: color var(--gr-dur-fast) var(--gr-ease);
+	}
+	.mt-table thead th button:hover {
+		color: var(--gr-text-1);
+	}
+	.mt-table thead th button::after {
+		content: '↕';
+		font-size: 0.9em;
+		opacity: 0.4;
+	}
+	.mt-table thead th[aria-sort='ascending'] button::after {
+		content: '↑';
+		opacity: 1;
+		color: var(--gr-accent-text);
+	}
+	.mt-table thead th[aria-sort='descending'] button::after {
+		content: '↓';
+		opacity: 1;
+		color: var(--gr-accent-text);
+	}
+	.mt-table thead th button:focus-visible {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: -2px;
+		border-radius: var(--gr-radius-sm);
+	}
+
+	/* Model name is the anchor of each row: id in mono, description under it.
+	   No min-width here: with `table-layout: fixed` the colgroup already reserves the
+	   space, and a min-width on top of it re-introduces the overflow. */
+	.mt-th-model {
+		font-weight: 400;
+	}
+	.mt-id {
+		display: block;
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: 0.8125rem;
+		color: var(--gr-text-1);
+		overflow-wrap: anywhere;
+	}
+	.mt-desc {
+		display: block;
+		margin-block-start: 0.15rem;
+		font-size: 0.75rem;
+		line-height: 1.35;
+		color: var(--gr-text-3);
+	}
+	/* Quality and speed ride under the description rather than holding their own
+	   columns: they are tie-breakers between two otherwise-similar models, and
+	   two more columns would force horizontal scrolling on a 46rem measure. */
+	.mt-metrics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-block-start: 0.2rem;
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		color: var(--gr-text-4);
+	}
+	.mt-free {
+		display: inline-block;
+		margin-block-start: 0.25rem;
+		padding: 0.05rem 0.35rem;
+		border-radius: var(--gr-radius-sm);
+		background: color-mix(in srgb, var(--gr-ok) 15%, transparent);
+		font-family: var(--gr-mono);
+		font-size: 0.625rem;
+		font-weight: 600;
+		color: var(--gr-ok-text);
+	}
+
+	.mt-eps {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+	.mt-ep {
+		padding: 0.05rem 0.3rem;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-sm);
+		background: var(--gr-surface-2);
+		font-size: 0.625rem;
+		color: var(--gr-text-3);
+	}
+
+	.mt-price {
+		font-family: var(--gr-mono);
+		font-size: 0.78125rem;
+		white-space: nowrap;
+		text-align: end;
+	}
+
+	/* A model outside the selected plan: dimmed, not hidden. The reader still
+	   wants to know it exists and what it would cost on another plan. */
+	tr.mt-locked {
+		opacity: 0.5;
+	}
+	tr.mt-locked .mt-th-model .mt-id {
+		text-decoration: line-through;
+		text-decoration-color: var(--gr-text-4);
+	}
+
+	.mt-empty {
+		margin: 1rem 0 0;
+		padding: 1.25rem;
+		border: 1px dashed var(--gr-border-strong);
+		border-radius: var(--gr-radius-md);
+		font-size: 0.9375rem;
+		color: var(--gr-text-3);
+		text-align: center;
+	}
+
+	.mt-foot {
+		margin: 0.9rem 0 0;
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		color: var(--gr-text-3);
+	}
+	.mt-foot a {
+		color: var(--gr-accent-text);
+	}
+
+	.mt-sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+</style>

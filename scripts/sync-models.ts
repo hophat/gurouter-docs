@@ -30,8 +30,8 @@ interface RawModel {
 	auto_speed?: number | null;
 	quota_type?: number;
 	model_ratio: number;
-	completion_ratio: number;
-	cache_ratio: number;
+	completion_ratio: number | null;
+	cache_ratio: number | null;
 	enable_groups?: string[];
 	supported_endpoint_types?: string[];
 }
@@ -68,8 +68,9 @@ interface CatalogModel {
 	description: string;
 	endpoints: string[];
 	groups: string[];
-	/** Base price per 1M tokens, before any group discount. */
-	base: { input: number; output: number; cacheRead: number };
+	/** Base price per 1M tokens, before any group discount. Null where the vendor
+	 *  publishes no rate for that token class — distinct from a rate of zero. */
+	base: { input: number; output: number | null; cacheRead: number | null };
 	/** Published quality/speed metrics, or null when the vendor has not published them. */
 	score: number | null;
 	speed: number | null;
@@ -106,10 +107,13 @@ async function main() {
 				description: m.description ?? '',
 				endpoints: m.supported_endpoint_types ?? [],
 				groups: m.enable_groups ?? [],
+				// A null ratio means the vendor publishes no rate for that class.
+				// Coercing it to 0 would advertise the model as free, which is a
+				// materially different claim.
 				base: {
 					input,
-					output: round(input * m.completion_ratio),
-					cacheRead: round(input * m.cache_ratio),
+					output: m.completion_ratio === null ? null : round(input * m.completion_ratio),
+					cacheRead: m.cache_ratio === null ? null : round(input * m.cache_ratio),
 				},
 				score: m.coding_score ?? null,
 				speed: m.auto_speed ?? null,

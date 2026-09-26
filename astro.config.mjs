@@ -35,6 +35,10 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Models',
+					items: [{ label: 'Models & pricing', slug: 'models' }],
+				},
+				{
 					label: 'API Reference',
 					items: [
 						{ label: 'SystemOne', slug: 'api/systemone' },

@@ -4,6 +4,8 @@
 
 - Writes prompts in Vietnamese, typed without diacritics (ASCII-only, e.g. "giao diện docs yêu cầu hiện đại đẹp 2026"). Treat it as Vietnamese intent. Confidence: 0.75
 - Gives extremely terse, one-line briefs and expects the agent to make the design/architecture calls autonomously rather than asking clarifying questions first. Confidence: 0.7
+- Misspellings are not an obstacle ("commt & deploy" for "commit & deploy") — infer the
+  intent and act; do not ask for confirmation of the spelling. Confidence: 0.5
 - Terseness extends to operations, not just design: "commit & deploy" bundled two irreversible
   actions with no repo, host, or target named, trusting the agent to discover the deploy
   procedure from the project itself (`deploy/DEPLOY-STEPS.md`). Confidence: 0.6

@@ -35,5 +35,13 @@
   (rationale: the build must not depend on a third-party endpoint, and a price that changes
   between review and publish is worse than one that is visibly stale). Accepted with a terse
   "Rõ rồi". Confidence: 0.5
+- An unused snapshot is still worth landing: when the consuming page did not exist yet, the
+  script + data were committed anyway so the work was not lost, and the user had said only
+  "commit & deploy" — no objection to landing groundwork the previous session left unfinished.
+  Land the partial infrastructure, but state plainly that no rendered page reads it yet.
+  Confidence: 0.5
+- Before committing a never-run script, run it once and inspect the output artifact
+  (record count, a sample record, the `fetchedAt` stamp) — an untested generator in a commit
+  is a liability. Confidence: 0.45
 - Snapshots get a `fetchedAt` timestamp so staleness is visible, and the sync script refuses
   to overwrite on an empty/malformed API response. Worth keeping as a pattern. Confidence: 0.5
