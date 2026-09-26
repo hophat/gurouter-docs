@@ -1,35 +1,59 @@
 ---
+/**
+ * YouTube embed.
+ *
+ * Attributes follow the iframe supplied in the brief, including the `si` share
+ * parameter. The fixed 560x315 from that markup is treated as a fallback rather
+ * than a constraint: on a 46rem content column a hard width would leave the player
+ * stranded in the middle, and below ~400px it would overflow the viewport. The
+ * wrapper keeps the 16:9 ratio and caps the player at 560px, so the rendered size
+ * matches the supplied code at narrow widths and fills the measure on wide ones.
+ */
 interface Props {
-  id: string;
-  title?: string;
+	id: string;
+	title?: string;
+	/** Value for YouTube's `si` share parameter. */
+	si?: string;
 }
 
-const { id, title = 'YouTube video player' } = Astro.props;
+const { id, title = 'YouTube video player', si } = Astro.props;
+
+const src = new URL(`https://www.youtube.com/embed/${id}`);
+if (si) src.searchParams.set('si', si);
 ---
 
 <div class="yt-embed">
-  <iframe
-    src={`https://www.youtube-nocookie.com/embed/${id}`}
-    title={title}
-    loading="lazy"
-    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-  ></iframe>
+	<iframe
+		width="560"
+		height="315"
+		src={src.toString()}
+		title={title}
+		frameborder="0"
+		allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+		referrerpolicy="strict-origin-when-cross-origin"
+		allowfullscreen
+		loading="lazy"
+	></iframe>
 </div>
 
 <style>
-  .yt-embed {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    margin: 1rem 0;
-  }
+	.yt-embed {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+		max-width: 560px;
+		margin-block: var(--gr-space-6);
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-md);
+		overflow: hidden;
+		background: var(--gr-surface-2);
+	}
 
-  .yt-embed iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
+	.yt-embed iframe {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		height: auto;
+		border: 0;
+	}
 </style>
