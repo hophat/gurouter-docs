@@ -17,6 +17,24 @@
   checked against the live `/pricing` page — the real charge multiplies by `group_ratio`, so
   one price per model was never correct. Derivation from code never substitutes for
   validation against rendered output. Confidence: 0.6
+- Re-verify against the *live* site, not just the local preview, after a deploy. The production
+  pass caught nothing new about the page but did confirm the server-rendered catalog survived
+  the sync (40 rows in the served HTML, null cache rates still rendering `n/a` rather than
+  being coerced to 0). Expected discipline; raise the confidence of an earlier deploy claim
+  rather than leaving it resting on a local build. Confidence: 0.5
+- A surprising number is a measurement bug until proven otherwise. `grep -c` counts matching
+  *lines*, not matches, so a 40-row single-line HTML blob reported "3" — the fix was
+  `grep -o … | wc -l`, plus an explicit correction in the write-up rather than quietly
+  re-running until the number looked right. Self-corrected miscounts are disclosed in the
+  report even when they turn out to be benign. Confidence: 0.5
+- Before declaring a layout defect from a geometry metric, confirm which element the number
+  describes. `scrollWidth` read off the table was blamed on table overflow, but the rows
+  measured exactly the container width and the overflow belonged to the sticky-header
+  scroll wrapper. Measure row vs. table vs. wrapper widths separately, and look at a
+  screenshot, before escalating. Confidence: 0.5
+- Prefer a real browser over `curl` when the claim is about rendering or interaction.
+  Headless Chrome over the DevTools protocol was reused to confirm plan switching, null-price
+  display and row geometry on the deployed domain. Confidence: 0.55
 
 ## Getting data out of a live system
 

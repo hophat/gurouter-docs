@@ -83,6 +83,17 @@
 	--gr-bg: #ffffff;
 	--gr-shadow-tint: rgb(12 12 13 / 0.07);
 
+	/* The wordmark gradient, sampled along the logo's arc in the order it appears:
+	   blue → violet → magenta → red → orange → gold. The hues are the mark's own;
+	   the three warm stops are darkened from their sampled values because those
+	   exact colours sit at 3.75–4.03:1 on white and this is text, which needs 4.5. */
+	--gr-title-1: #014bcf;
+	--gr-title-2: #6703d0;
+	--gr-title-3: #b728f0;
+	--gr-title-4: #e21728;
+	--gr-title-5: #de2d05;
+	--gr-title-6: #976b00;
+
 	/* The signal hue: red-orange, from the mark's arc. It carries route state.
 	   The fill steps down to #d93a0d so white text on it clears 4.5:1 — at #ff4a1c
 	   the label sat at 3.36:1, which fails AA. The brighter value is kept for the
@@ -154,6 +165,16 @@
 	--gr-surface-3: #222228;
 	--gr-bg: #0c0c0e;
 	--gr-shadow-tint: rgb(0 0 0 / 0.5);
+
+	/* Same hues as light mode, stepped up in lightness: the logo's own colours
+	   are mid-tone and lose their signal against a near-black field. Each of these
+	   clears 4.5:1 on the dark surfaces. */
+	--gr-title-1: #6ba6ff;
+	--gr-title-2: #a184ff;
+	--gr-title-3: #e08dff;
+	--gr-title-4: #ff7070;
+	--gr-title-5: #ff8a5c;
+	--gr-title-6: #ffc44d;
 
 	--gr-accent: #ff7043;
 	--gr-accent-hover: #ff8a63;
@@ -250,6 +271,53 @@ body {
 .site-title {
 	font-weight: 700;
 	letter-spacing: -0.02em;
+}
+/*
+ * The wordmark takes its colour from the logo. The logo is a spectrum arc, so a
+ * single accent hue would misrepresent the brand: the whole mark is the gradient.
+ * These stops are sampled from `gurouter.com/logo.png` along the arc, in the order
+ * they appear, so the title reads as the mark rather than borrowing one colour.
+ *
+ * The gradient goes on the label, not the link: the link also contains the logo
+ * image, and clipping a gradient to an image's box would tint the artwork itself.
+ */
+.site-title > span {
+	color: var(--gr-title-1);
+	background-image: linear-gradient(
+		100deg,
+		var(--gr-title-1) 0%,
+		var(--gr-title-2) 22%,
+		var(--gr-title-3) 44%,
+		var(--gr-title-4) 66%,
+		var(--gr-title-5) 84%,
+		var(--gr-title-6) 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+}
+/* Only go transparent once clipping is actually supported, otherwise the label
+   would render invisible against the fallback colour. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+	.site-title > span {
+		-webkit-text-fill-color: transparent;
+		color: transparent;
+	}
+}
+.site-title:hover > span {
+	background-image: linear-gradient(
+		100deg,
+		var(--gr-title-1) 0%,
+		var(--gr-title-2) 22%,
+		var(--gr-title-3) 44%,
+		var(--gr-title-4) 66%,
+		var(--gr-title-5) 84%,
+		var(--gr-title-6) 100%
+	);
+}
+.site-title:focus-visible {
+	outline: 2px solid var(--gr-focus);
+	outline-offset: 3px;
+	border-radius: var(--gr-radius-sm);
 }
 .site-title img {
 	height: 1.5rem;

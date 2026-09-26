@@ -48,5 +48,23 @@
   left for the next commit to sweep up. Recurred across both deploy cycles. Confidence: 0.55
 - Running a dev/preview server for a screenshot is a legitimate step, but it gets stopped
   afterwards — no stray processes left behind. Confidence: 0.5
-ed
-  afterwards — no stray processes left behind. Confidence: 0.5
+
+## What "clean" covers
+
+- A request to clean up means the whole sweep, not just the repo: prune the old timestamped
+  backups left on the VPS, delete scratch dirs (`.shots/`, `.cache/`, helper HTML injected into
+  `dist/`), remove the `/tmp` headless-Chrome user-data profiles and the throwaway CDP scripts
+  written alongside them, kill dev/preview servers, and confirm `git status` clean plus no
+  stray background shell tasks left running. Confidence: 0.55
+- Backup retention is a judgement call worth reporting, not deciding silently: after shipping to
+  production, keep the single newest backup as a rollback path instead of clearing the directory
+  ("clean" read literally), and hand the user the exact `ssh … rm -rf` line to run once they are
+  satisfied the site is stable. Losing the way back immediately after a production deploy is
+  not the agent's call. Confidence: 0.5
+
+## Post-deploy verification
+
+- A deploy is not done when `rsync` returns. Expected: build → backup → sync → curl every
+  route's `%{http_code}` (the full set, not just the changed page) → check the search-index
+  asset still 200s → confirm the new page's content is actually present in the served HTML.
+  Confidence: 0.5

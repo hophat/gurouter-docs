@@ -8,7 +8,10 @@
   intent and act; do not ask for confirmation of the spelling. Confidence: 0.5
 - Terseness extends to operations, not just design: "commit & deploy" bundled two irreversible
   actions with no repo, host, or target named, trusting the agent to discover the deploy
-  procedure from the project itself (`deploy/DEPLOY-STEPS.md`). Confidence: 0.6
+  procedure from the project itself (`deploy/DEPLOY-STEPS.md`). The same shape recurs as
+  "merge & deploy & clean" — push, ship, then sweep the workspace — with "merge" used loosely
+  for *push to origin* of already-committed work. Treat the whole line as authorization for the
+  full path, cleanup included. Confidence: 0.65
 - Frames requests around a desired *outcome and mood* ("modern, beautiful, 2026") rather than implementation detail; the agent is expected to derive the concrete spec. Confidence: 0.55
 - Confirms understanding tersely and moves on ("Rõ rồi", "ftech nội dung" → "tạo docs cho từng model"). Treat a short affirmative as approval to proceed, not as a request for more detail. Confidence: 0.55
 - Pastes concrete markup as a *spec to match exactly* — a YouTube embed snippet with named
