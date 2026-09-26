@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gurouter-docs": {
+      "transport": "stdio",
+      "enabled": true,
+      "command": "bun",
+      "args": ["scripts/docs-mcp.ts"],
+      "env": {}
+    }
+  }
+}

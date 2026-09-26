@@ -1,0 +1,8 @@
+# Root — general preferences
+- Writes prompts in Vietnamese, typed without diacritics (ASCII-only, e.g. "giao diện docs yêu cầu hiện đại đẹp 2026"). Treat it as Vietnamese intent. Confidence: 0.75
+- Gives extremely terse, one-line briefs and expects the agent to make the design/architecture calls autonomously rather than asking clarifying questions first. Confidence: 0.75
+- Follow-ups are terse status checks ("done chưa ?") rather than new instructions. Read them as "give me the state of the work", so a good reply states what is done, what is not, and where things stand in the repo (committed / pushed / deployed) rather than re-explaining the plan. Confidence: 0.65
+- Frames requests around a desired *outcome and mood* ("modern, beautiful, 2026") rather than implementation detail; the agent is expected to derive the concrete spec. Confidence: 0.55
+- Confirms understanding tersely and moves on ("Rõ rồi", "ftech nội dung" → "tạo docs cho từng model"). Treat a short affirmative as approval to proceed, not as a request for more detail. Confidence: 0.55
+- States the end-state architecture in the brief itself, in one line: "thiết lập MCP cho docs để sau AI agent dễ dàng quản lý content, tôi sẽ điều khiển agent để quản lý docs" is not a feature request for an MCP server, it is a decision that content is meant to be managed by an agent the user directs. Read briefs like this for the operating model they imply, not just the artifact named. Confidence: 0.6
+- For "how do we manage this content", a human-facing CMS was passed over in favour of a tool interface an agent can drive. The user is the one directing; the agent is the one doing. Expect tooling, not authoring UIs. Confidence: 0.5

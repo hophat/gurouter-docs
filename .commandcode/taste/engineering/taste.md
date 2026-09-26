@@ -35,6 +35,87 @@
 - Prefer a real browser over `curl` when the claim is about rendering or interaction.
   Headless Chrome over the DevTools protocol was reused to confirm plan switching, null-price
   display and row geometry on the deployed domain. Confidence: 0.55
+- A check that reports failure is evidence about the *check*, not yet about the code. The
+  wordmark gradient "did not apply" (`background-clip: none` in the computed style) was
+  chased into the stylesheet as a specificity problem — grepping every `.site-title` rule
+  and suspecting a competing declaration — when the probe was querying
+  `.site-title a` and the text actually lives in `.site-title > span`. The markup was
+  never wrong; the instrument was. Before editing code to satisfy a red check, confirm the
+  probe can see the element it is looking for. Confidence: 0.5
+- Don't write selectors against an assumed DOM. Read the served HTML around the target
+  element (curl the page, slice around the class name) before authoring a rule against it.
+  The markup for the site title was `<a><img><span>text</span></a>`, which invalidated the
+  obvious first guess twice over — wrong element, and a gradient clipped to that box would
+  have tinted the logo artwork. Confidence: 0.5
+- Reusing and patching one throwaway CDP script across iterations beats regenerating it —
+  the verification harness gets cheaper as it accumulates, and a fix to the probe is
+  distinguishable from a fix to the page. Confidence: 0.4
+- A check that reports failure is evidence about the *check*, not yet about the code — and
+  it is also evidence about the *timeout*. A build that "failed" inside a tool turned out to
+  be an `execFile` timeout too short for a second consecutive run, while the build itself
+  was clean. Check the exit code and the clock before believing the red. Confidence: 0.55
+- Read the stream the tool actually reports in. Astro writes its result to `stderr` as well
+  as `stdout`; reading only `stdout` hid a real failure behind a clean-looking empty
+  string, and `[WARN]` lines were initially mistaken for errors. Capture both and
+  discriminate on the exit code. Confidence: 0.55
+- Verify a generated diff by what actually changed, not by how large it looks. The sync
+  run showed `models.json` dirty; the diff was a timestamp and group ordering, with no
+  model or price altered. Inspect the changed lines before narrating a change as real. Confidence: 0.5
+- A test that dirties the repo should be made revertible before it is first run, not
+  after. Committing a `wip:` so a test's writes are `git checkout`-able was done up front;
+  later iterations only restored `src/content/docs` and `astro.config.mjs` and reverted
+  the uncommitted fix by accident. Scope the reset narrowly and re-apply fixes after. Confidence: 0.5
+- A conventional name may be silently ignored by a content pipeline. Astro skips
+  collection files whose name starts with `_`, so a page written as `_draft` was listed in
+  the sidebar and then failed the build — invisible in a directory listing that looks
+  correct. A test artifact hit this before the slug was renamed. Confidence: 0.5
+- Path handling that takes strings from a caller gets a confinement check plus a test for
+  it. `get_page` with `../../../etc/passwd` is refused, and the refusal is asserted in
+  the suite rather than assumed from the resolve logic. Confidence: 0.55
+
+## Tools an agent will drive
+
+- When a tool is being built for an agent, the tool's own job is to surface the errors the
+  agent would otherwise never hit. The `build` tool existed to be the one thing that proved
+  MDX compiled; a cheap pre-flight check beside it was not sufficient on its own. Confidence: 0.6
+- A tool that leaves a follow-up action to the caller must say so unambiguously in its own
+  output, and the caller is a machine. Report the exact remaining steps in the result text,
+  not in a code comment. Confidence: 0.55
+- A capability that quietly creates a *second* problem is worse than not having it. `delete_page`
+  left the sidebar entry behind, which Starlight treats as a hard build failure — so the
+  cleanup belongs inside the tool, not in a "now you go remove this" message. If violating
+  the invariant is a build failure, the tool owns the repair. Confidence: 0.6
+- Encode the conventions *in the tool*, not in a document the agent has to find and read.
+  The whole point was that the rules were living in someone's head; a `site_conventions`
+  tool that returns them beats a section in a file. Confidence: 0.55
+- An agent-facing tool should also register the paths it touches in the agent's own
+  convention files (AGENTS.md), so the next session inherits the knowledge rather than
+  rediscovering it. Confidence: 0.5
+- Test such a tool through its real interface — an official client over real stdio, not a
+  mocked call — so the handshake, the schemas and the results are exercised the way an agent
+  will exercise them. 30 checks, including a full create/update/delete round-trip, the build
+  passing both while the page exists and after it is gone, and path traversal refused. Confidence: 0.55
+
+## Color and contrast as measured values
+
+- Brand colors are sampled from the source asset's pixels, never chosen by eye. The logo
+  PNG was downloaded and read with PIL: top-frequency colors, then per-hue buckets, then
+  positions sampled *along the gradient arc* to recover the stops in the order they appear.
+  Eyeballing a gradient produces a plausible sequence that does not match the mark.
+  Confidence: 0.5
+- Contrast is computed, not assessed. A short Python implementation of the WCAG relative
+  luminance and contrast ratio was run over every new stop against every surface it lands
+  on (white; and in dark mode, the background *and* both elevated surfaces, taking the
+  worst case). Three of six sampled colors failed as body text and were corrected before
+  the build. Worth treating as a required step for any new color token, not a nicety.
+  Confidence: 0.5
+- When a color fails contrast, move lightness and hold hue. The correction script walks
+  `L` down in small steps until the ratio clears, keeping `H` and `S` fixed, so the
+  corrected swatch is still recognizably the brand color. Report the trade-off explicitly
+  when the corrected value is visibly off-brand. Confidence: 0.5
+- Dark mode is its own token set derived from the same hues, not an inversion — the logo's
+  mid-tone colors lose signal on a near-black field, so every stop was stepped *up* in
+  lightness and re-checked against the darkest surface in the theme. Confidence: 0.45
 
 ## Getting data out of a live system
 

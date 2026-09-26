@@ -22,9 +22,31 @@
   safe by default instead (timestamped backup, clean-tree check, build, route + live-DOM
   verification) and report the evidence afterwards. The user asked for the irreversible
   part up front and the full sequence ran to completion without objection. Confidence: 0.6
+- The converse holds, twice now: a request that does *not* say deploy ends at the commit.
+  Both times the agent committed, stated plainly that it stopped short of deploying because
+  it was not asked, and offered the push. So the trigger for deploying is the word, not the
+  project being deployable. Confidence: 0.55
 - When a plan hits a genuine blocker mid-flight (no git repo, the configured remote returns
   "Repository not found"), surface it rather than improvising a workaround. No pushback on
   being stopped. Confidence: 0.6
+
+## Reporting state honestly
+
+- A terse "done chưa?" is answered with an explicit split of done vs. not done, including
+  the parts that look finished but aren't: commits sitting unpushed, deployment not run so
+  production still serves the old version. Do not let "the build passes" stand in for
+  "shipped". Confidence: 0.6
+
+## Authority granted to an agent-driven workflow
+
+- Authority *offered* is not authority *granted*. Offered a three-rung tool surface for an
+  agent-driven content workflow — read/write files, read/write plus a real build, and the
+  same plus self-deploy — the user took the middle rung and declined the self-publish one.
+  When the agent rather than the user is the actor, the irreversible step stays with the
+  human even though it is there to be wired up. Confidence: 0.6
+- Prefer the option that lets the agent verify its own work over the one that is merely
+  more capable, and prefer repo-local writes over a side branch or direct publish. The
+  chosen rung was the one where every change is a revertible diff the human can read. Confidence: 0.55
 
 ## Version control
 
@@ -48,6 +70,13 @@
   left for the next commit to sweep up. Recurred across both deploy cycles. Confidence: 0.55
 - Running a dev/preview server for a screenshot is a legitimate step, but it gets stopped
   afterwards — no stray processes left behind. Confidence: 0.5
+- No scaffolding commits in the pushed history. A `wip:` marker created only as a
+  revert point before a dirty-repo test is reported as not belonging in history, and the
+  agent offers to squash it (with a backup on the VPS before the rebase) rather than
+  pushing it or hiding it. Clean history is preferred over a fast push. Confidence: 0.55
+- Repo hygiene covers the *agent's own* commits, not just the pre-existing mess: anything
+  the agent created while working is expected to be cleaned up before handing back, and
+  named explicitly when it isn't. Confidence: 0.55
 
 ## What "clean" covers
 

@@ -1,5 +1,5 @@
 {
-	"fetchedAt": "2026-09-26T12:24:13.732Z",
+	"fetchedAt": "2026-09-26T16:55:32.628Z",
 	"groups": {
 		"default": "Default",
 		"pro": "Pro",
@@ -60,11 +60,11 @@
 				"openai"
 			],
 			"groups": [
-				"pro",
 				"subscriber",
 				"vibecode",
 				"default",
-				"vip"
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 4,
@@ -103,10 +103,10 @@
 				"openai"
 			],
 			"groups": [
+				"vip",
 				"vibecode",
 				"subscriber",
-				"pro",
-				"vip"
+				"pro"
 			],
 			"base": {
 				"input": 0.05,
@@ -187,10 +187,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
 				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip"
 			],
 			"base": {
 				"input": 0.22,
@@ -229,10 +229,10 @@
 				"openai"
 			],
 			"groups": [
-				"vibecode",
 				"vip",
 				"pro",
-				"subscriber"
+				"subscriber",
+				"vibecode"
 			],
 			"base": {
 				"input": 0.22,
@@ -250,10 +250,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
 				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip"
 			],
 			"base": {
 				"input": 1.5,
@@ -330,7 +330,7 @@
 				"cacheRead": 0.2
 			},
 			"score": null,
-			"speed": 31
+			"speed": 30
 		},
 		{
 			"id": "MiniMax-M2.7-highspeed",
@@ -413,7 +413,7 @@
 				"cacheRead": 0.06
 			},
 			"score": 59,
-			"speed": 30
+			"speed": 31
 		},
 		{
 			"id": "moonshotai/Kimi-K2.5",
@@ -444,10 +444,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
-				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 0.95,
@@ -465,10 +465,10 @@
 				"openai"
 			],
 			"groups": [
+				"subscriber",
 				"vibecode",
 				"vip",
-				"pro",
-				"subscriber"
+				"pro"
 			],
 			"base": {
 				"input": 0.95,
@@ -507,10 +507,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
-				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 0.5,
@@ -549,10 +549,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
-				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 2.5,
@@ -570,10 +570,10 @@
 				"openai"
 			],
 			"groups": [
+				"vibecode",
 				"vip",
 				"pro",
-				"subscriber",
-				"vibecode"
+				"subscriber"
 			],
 			"base": {
 				"input": 0.4,
@@ -654,10 +654,10 @@
 				"openai"
 			],
 			"groups": [
-				"pro",
 				"subscriber",
 				"vibecode",
-				"vip"
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 0,
@@ -675,10 +675,10 @@
 				"openai"
 			],
 			"groups": [
-				"vibecode",
-				"vip",
 				"pro",
-				"subscriber"
+				"subscriber",
+				"vibecode",
+				"vip"
 			],
 			"base": {
 				"input": 0,
@@ -686,7 +686,7 @@
 				"cacheRead": null
 			},
 			"score": null,
-			"speed": 37
+			"speed": 41
 		},
 		{
 			"id": "swe-2-max",
@@ -738,10 +738,10 @@
 				"openai"
 			],
 			"groups": [
+				"vip",
 				"pro",
 				"subscriber",
-				"vibecode",
-				"vip"
+				"vibecode"
 			],
 			"base": {
 				"input": 2.5,
@@ -759,10 +759,10 @@
 				"openai"
 			],
 			"groups": [
-				"vip",
-				"pro",
 				"subscriber",
-				"vibecode"
+				"vibecode",
+				"vip",
+				"pro"
 			],
 			"base": {
 				"input": 0.14,
@@ -801,10 +801,10 @@
 				"openai"
 			],
 			"groups": [
+				"vibecode",
 				"vip",
 				"pro",
-				"subscriber",
-				"vibecode"
+				"subscriber"
 			],
 			"base": {
 				"input": 0.14,
@@ -822,10 +822,10 @@
 				"openai"
 			],
 			"groups": [
-				"subscriber",
 				"vibecode",
 				"vip",
-				"pro"
+				"pro",
+				"subscriber"
 			],
 			"base": {
 				"input": 0.6,
@@ -843,10 +843,10 @@
 				"openai"
 			],
 			"groups": [
+				"pro",
 				"subscriber",
 				"vibecode",
-				"vip",
-				"pro"
+				"vip"
 			],
 			"base": {
 				"input": 1,
@@ -864,10 +864,10 @@
 				"openai"
 			],
 			"groups": [
-				"subscriber",
-				"vibecode",
 				"vip",
-				"pro"
+				"pro",
+				"subscriber",
+				"vibecode"
 			],
 			"base": {
 				"input": 1.4,
