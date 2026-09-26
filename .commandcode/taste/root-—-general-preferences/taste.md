@@ -4,7 +4,16 @@
 - Asks "how do I use this" in a few words, and expects a complete written guide back: numbered setup steps, a table of every option with when to use it, and the gotchas that bite. One well-structured answer, no follow-up questions. Confidence: 0.55
 - Gives extremely terse, one-line briefs and expects the agent to make the design/architecture calls autonomously rather than asking clarifying questions first. Confidence: 0.75
 - Replies to a numbered list of options with just the number ("2"). A bare digit selecting from your own list is a complete instruction — treat it as full authorization for everything that option said, and carry it out end to end without echoing the choice back or re-confirming. Confidence: 0.6
-- Follow-ups are terse status checks ("done chưa ?") rather than new instructions. Read them as "give me the state of the work", so a good reply states what is done, what is not, and where things stand in the repo (committed / pushed / deployed) rather than re-explaining the plan. Confidence: 0.65
+- Surface adjacent operational risk that falls outside the requested scope, briefly and without
+  acting on it. The VPS disk was at 88% before the sweep and 89% after, with the growth attributed
+  to something outside the agent's scope — reported in one line as "not mine to fix today, but
+  know before it becomes a problem", with no offer to go dig. Scope discipline plus a heads-up. Confidence: 0.5
+- Final sign-off is a compact evidence block, not prose: the last few commit subjects, a
+  before→after cleanup table, and the routes/lines the user needs to reproduce it themselves. Confidence: 0.45
+- Follow-ups are terse status checks ("done chưa ?", "merge & close task, clean") rather than new
+  instructions. Read them as "give me the state of the work / finish the housekeeping", so a good
+  reply states what is done, what is not, and where things stand in the repo (committed / pushed /
+  deployed) rather than re-explaining the plan. Confidence: 0.7
 - Frames requests around a desired *outcome and mood* ("modern, beautiful, 2026") rather than implementation detail; the agent is expected to derive the concrete spec. Confidence: 0.55
 - Confirms understanding tersely and moves on ("Rõ rồi", "ftech nội dung" → "tạo docs cho từng model"). Treat a short affirmative as approval to proceed, not as a request for more detail. Confidence: 0.55
 - States the end-state architecture in the brief itself, in one line: "thiết lập MCP cho docs để sau AI agent dễ dàng quản lý content, tôi sẽ điều khiển agent để quản lý docs" is not a feature request for an MCP server, it is a decision that content is meant to be managed by an agent the user directs. Read briefs like this for the operating model they imply, not just the artifact named. Confidence: 0.6

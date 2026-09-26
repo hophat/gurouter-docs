@@ -97,11 +97,15 @@
   `dist/`), remove the `/tmp` headless-Chrome user-data profiles and the throwaway CDP scripts
   written alongside them, kill dev/preview servers, and confirm `git status` clean plus no
   stray background shell tasks left running. Confidence: 0.55
-- Backup retention is a judgement call worth reporting, not deciding silently: after shipping to
-  production, keep the single newest backup as a rollback path instead of clearing the directory
-  ("clean" read literally), and hand the user the exact `ssh … rm -rf` line to run once they are
-  satisfied the site is stable. Losing the way back immediately after a production deploy is
-  not the agent's call. Confidence: 0.5
+- When the user *explicitly* asks to clean up, read it literally and take the whole sweep:
+  "merge & close task, clean" produced backups 2 → 0 (all timestamped VPS backups deleted, not
+  the newest held back), safety tag gone, /tmp scripts gone, dev processes stopped, working tree
+  clean — reported as a before→after table. Holding the newest backup back and handing over an
+  `ssh … rm -rf` line is the right call only when cleanup is the agent's own idea, not when
+  cleanup is the instruction. Confidence: 0.5
+- "close task" means the agent's own internal todo list, not an issue tracker. The user chains
+  VCS, task-list and environment verbs into one line and expects all of them done in the same
+  pass; leaving the todo list open reads as an unfinished job. Confidence: 0.5
 
 ## Post-deploy verification
 
@@ -111,6 +115,10 @@
   Confidence: 0.5
 - When the change is a *computed style*, the HTTP status codes are not enough — a route can
   return 200 with the styling silently absent. Confirm via headless Chrome on the live
+  domain that `getComputedStyle` reports the actual `background-image` and
+  `background-clip: text`, and capture a clipped screenshot of the element to read back.
+  Confirming the new hashed CSS asset is served is necessary but not sufficient. Confidence: 0.5
+rm via headless Chrome on the live
   domain that `getComputedStyle` reports the actual `background-image` and
   `background-clip: text`, and capture a clipped screenshot of the element to read back.
   Confirming the new hashed CSS asset is served is necessary but not sufficient. Confidence: 0.5
