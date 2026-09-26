@@ -1,0 +1,129 @@
+/*
+ * Splash page only. The hero's grid, type and padding now live in the Hero override
+ * (`src/components/Hero.astro`); this file handles only what sits below it.
+ */
+
+.hero .stack {
+	text-align: start;
+}
+.hero .copy {
+	align-items: flex-start;
+}
+.hero h1 {
+	font-size: clamp(2.25rem, 1.25rem + 3.6vw, 3.75rem);
+	line-height: 1.04;
+	font-weight: 700;
+	letter-spacing: -0.035em;
+	color: var(--gr-text-1);
+	text-wrap: balance;
+}
+.hero .tagline {
+	max-width: 48ch;
+	font-size: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+	line-height: 1.55;
+	color: var(--gr-text-3);
+	text-wrap: pretty;
+}
+.hero .actions {
+	gap: var(--gr-space-3);
+	justify-content: flex-start;
+}
+
+/* ----------------------------------------------- endpoint surface sections -- */
+
+/* These are three documented endpoints, so they are a comparison: same rhythm, same
+   method chip, one edge dividing them. A card grid would imply they are interchangeable
+   cards, which they are not. */
+.surf-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0;
+	border-top: 1px solid var(--gr-border);
+}
+@media (min-width: 60rem) {
+	.surf-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.surf {
+	display: grid;
+	align-content: start;
+	gap: 0.5rem;
+	padding: 1.25rem 0;
+	border-bottom: 1px solid var(--gr-border);
+}
+@media (min-width: 60rem) {
+	.surf {
+		padding: 1.5rem 1.5rem 1.5rem 0;
+	}
+	.surf + .surf {
+		padding-inline-start: 1.5rem;
+		border-inline-start: 1px solid var(--gr-border);
+	}
+}
+@media (max-width: 59.999rem) {
+	.surf + .surf {
+		border-top: 0;
+	}
+}
+
+.surf-head {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--gr-text-4);
+}
+.surf-head svg {
+	color: var(--gr-text-4);
+}
+
+.surf-method {
+	padding: 0.15rem 0.4rem;
+	border-radius: var(--gr-radius-sm);
+	font-family: var(--gr-mono);
+	font-size: 0.625rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	background: var(--gr-surface-3);
+	color: var(--gr-text-3);
+}
+.surf-method--live {
+	background: color-mix(in srgb, var(--gr-ok) 14%, transparent);
+	color: var(--gr-ok-text);
+}
+
+.surf-title {
+	margin: 0;
+	font-size: 1.0625rem;
+	font-weight: 700;
+	letter-spacing: -0.018em;
+	color: var(--gr-text-1);
+}
+.surf-body {
+	margin: 0;
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: var(--gr-text-2);
+	text-wrap: pretty;
+}
+
+.surf-more {
+	justify-self: start;
+	margin-top: 0.25rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--gr-accent-text);
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--gr-accent) 35%, transparent);
+	padding-bottom: 1px;
+	transition: border-color var(--gr-dur-fast) var(--gr-ease);
+}
+.surf-more:hover {
+	border-bottom-color: currentColor;
+}
+.surf-more:focus-visible {
+	outline: 2px solid var(--gr-focus);
+	outline-offset: 3px;
+	border-radius: 2px;
+}

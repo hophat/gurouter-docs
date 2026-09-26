@@ -1,0 +1,78 @@
+---
+/**
+ * SpecList — the key/value block an endpoint reference opens with.
+ *
+ * A markdown table with an empty header row is the usual way this gets written, and it
+ * renders as a collapsed, headerless strip that reads as a stray hairline. This is the
+ * same information as a real list: label left, value right, aligned on one baseline.
+ */
+interface Props {
+	rows: { label: string; value: string }[];
+}
+
+const { rows } = Astro.props;
+---
+
+<dl class="spec">
+	{
+		rows.map((row) => (
+			<div class="spec-row">
+				<dt class="spec-label">{row.label}</dt>
+				<dd class="spec-value">
+					<code>{row.value}</code>
+				</dd>
+			</div>
+		))
+	}
+</dl>
+
+<style>
+	.spec {
+		display: grid;
+		gap: 0;
+		margin: 0 0 var(--gr-space-9);
+		padding: 0;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-md);
+		background: var(--gr-surface-2);
+		overflow: hidden;
+	}
+
+	.spec-row {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.15rem;
+		padding: 0.7rem 0.9rem;
+	}
+	.spec-row + .spec-row {
+		border-top: 1px solid var(--gr-border);
+	}
+
+	.spec-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		color: var(--gr-text-3);
+	}
+
+	.spec-value {
+		margin: 0;
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+	.spec-value :global(code) {
+		background: transparent;
+		border: 0;
+		padding: 0;
+		font-size: 0.875rem;
+		color: var(--gr-text-1);
+	}
+
+	@media (min-width: 32rem) {
+		.spec-row {
+			grid-template-columns: 10rem minmax(0, 1fr);
+			align-items: baseline;
+			gap: 1rem;
+		}
+	}
+</style>

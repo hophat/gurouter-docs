@@ -1,0 +1,714 @@
+/*
+ * GuRouter Docs — visual layer.
+ *
+ * Register: PRODUCT (a gateway's API surface), with a brand splash at the root.
+ *
+ * The accent hue is sampled from the GuRouter mark. The mark's arc runs yellow → red →
+ * magenta → violet → blue → green, so there is no single brand hue to copy. The
+ * gateway itself is the argument: GuRouter routes a request to whichever upstream can
+ * serve it, and the accent role is filled by *route*, not by a fixed color. That is why
+ * `state` and `live` are the same hue, and why the whole palette is otherwise neutral.
+ * The result is a "conversational" commitment: one loud voice, the rest supporting.
+ *
+ * Everything below is a token or a targeted override. Layout is a grid; chrome is
+ * hairline; there are no gradients on surfaces and no glow.
+ */
+
+/* Self-hosted via Vite — no runtime font CDN. */
+@import '@fontsource-variable/archivo/index.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+
+/* ============================================================== foundations == */
+
+:root {
+	/* Type. Archivo: a grotesque with real 750+ weights, so the signal/terminal
+	   hierarchy can be carried by weight alone. JetBrains Mono for wire data. */
+	--gr-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+	--gr-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', monospace;
+	--sl-font: var(--gr-sans);
+	--sl-font-mono: var(--gr-mono);
+
+	/* Measure. 46rem ≈ 72ch at this size — inside the 60–76ch band, and wide enough
+	   that curl blocks do not wrap. */
+	--sl-content-width: 46rem;
+	--sl-line-height: 1.7;
+	--sl-content-gap-y: 1.15rem;
+	--sl-line-height-headings: 1.18;
+
+	/* 1-4-9 spacing rhythm. Every gap in the site is one of these. */
+	--gr-space-1: 0.25rem;
+	--gr-space-2: 0.5rem;
+	--gr-space-3: 0.75rem;
+	--gr-space-4: 1rem;
+	--gr-space-6: 1.5rem;
+	--gr-space-9: 2.25rem;
+	--gr-space-12: 3rem;
+	--gr-space-18: 4.5rem;
+
+	--gr-radius-sm: 6px;
+	--gr-radius-md: 10px;
+	--gr-radius-lg: 16px;
+	--gr-radius-pill: 999px;
+
+	/* Motion: quint-out decelerates hard. No bounce, no elastic. */
+	--gr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--gr-dur-fast: 120ms;
+	--gr-dur: 200ms;
+	--gr-dur-slow: 420ms;
+}
+
+:root {
+	/* Shadows are elevation, not decoration: a 1px ring, a tight contact shadow,
+	   a wide ambient one. Consistent spread = consistent meaning. */
+	--gr-shadow-sm: 0 1px 2px var(--gr-shadow-tint);
+	--gr-shadow-md: 0 2px 4px var(--gr-shadow-tint), 0 8px 24px -6px var(--gr-shadow-tint);
+	--gr-shadow-lg: 0 4px 8px var(--gr-shadow-tint), 0 20px 48px -12px var(--gr-shadow-tint);
+}
+
+/* ================================================================ light == */
+
+:root[data-theme='light'] {
+	/* Neutrals carry a trace of the brand hue (chroma 0.005) so gray surfaces read
+	   as authored rather than as an empty printer. */
+	--gr-white: #ffffff;
+	--gr-text-1: #0c0c0d; /* headings, strong */
+	--gr-text-2: #3d3d44; /* body */
+	--gr-text-3: #6b6b76; /* secondary */
+	--gr-text-4: #6f6f7c; /* muted, non-essential; held at 4.5:1 on the faint fills */
+	--gr-border: #e7e7ec;
+	--gr-border-strong: #d2d2da;
+	--gr-surface-1: #ffffff;
+	--gr-surface-2: #fbfbfc; /* code, inset rows */
+	--gr-surface-3: #f4f4f6; /* hover fills */
+	--gr-bg: #ffffff;
+	--gr-shadow-tint: rgb(12 12 13 / 0.07);
+
+	/* The signal hue: red-orange, from the mark's arc. It carries route state.
+	   The fill steps down to #d93a0d so white text on it clears 4.5:1 — at #ff4a1c
+	   the label sat at 3.36:1, which fails AA. The brighter value is kept for the
+	   focus ring, which is a non-text element and only needs 3:1. */
+	--gr-accent: #d93a0d;
+	--gr-accent-hover: #bd2f06;
+	--gr-accent-soft: #fff2ed;
+	--gr-accent-text: #c22f06;
+	--gr-on-accent: #ffffff;
+	--gr-focus: #ff4a1c;
+
+	--gr-ok: #0d7a4a;
+	--gr-ok-text: #0c6b42;
+	--gr-on-ok: #ffffff;
+	--gr-warn: #b06a00;
+	--gr-warn-text: #8a5200;
+	--gr-danger: #d1293d;
+	--gr-danger-text: #a01326;
+
+	/* Map onto Starlight's contract. */
+	--sl-color-white: var(--gr-text-1);
+	--sl-color-gray-1: var(--gr-text-1);
+	--sl-color-gray-2: var(--gr-text-2);
+	--sl-color-gray-3: var(--gr-text-3);
+	--sl-color-gray-4: var(--gr-text-4);
+	--sl-color-gray-5: var(--gr-border);
+	--sl-color-gray-6: var(--gr-border-strong);
+	--sl-color-gray-7: var(--gr-surface-3);
+	--sl-color-black: var(--gr-bg);
+
+	--sl-color-accent-low: var(--gr-accent-soft);
+	--sl-color-accent: var(--gr-accent);
+	--sl-color-accent-high: var(--gr-accent-text);
+
+	--sl-color-text: var(--gr-text-2);
+	--sl-color-text-accent: var(--gr-accent-text);
+	--sl-color-text-invert: var(--gr-on-accent);
+
+	--sl-color-bg: var(--gr-bg);
+	--sl-color-bg-nav: rgb(255 255 255 / 0.82);
+	--sl-color-bg-sidebar: transparent;
+	--sl-color-bg-inline-code: var(--gr-surface-2);
+	--sl-color-bg-accent: var(--gr-accent);
+
+	--sl-color-hairline-light: var(--gr-border);
+	--sl-color-hairline: var(--gr-border);
+	--sl-color-hairline-shade: var(--gr-border);
+
+	--sl-color-backdrop-overlay: rgb(12 12 13 / 0.4);
+	--sl-shadow-sm: var(--gr-shadow-sm);
+	--sl-shadow-md: var(--gr-shadow-md);
+	--sl-shadow-lg: var(--gr-shadow-lg);
+}
+
+/* ================================================================ dark == */
+
+:root[data-theme='dark'] {
+	/* Dark neutrals also carry the hue, and the accent steps *up* in lightness
+	   because a saturated red-orange loses its signal on a near-black field. */
+	--gr-white: #f7f7f8;
+	--gr-text-1: #f4f4f6;
+	--gr-text-2: #c6c6cf;
+	--gr-text-3: #92929f;
+	--gr-text-4: #8a8a98; /* muted; lifted to clear 4.5:1 on the dark surfaces */
+	--gr-border: #26262d;
+	--gr-border-strong: #3a3a44;
+	--gr-surface-1: #131316;
+	--gr-surface-2: #1a1a1f;
+	--gr-surface-3: #222228;
+	--gr-bg: #0c0c0e;
+	--gr-shadow-tint: rgb(0 0 0 / 0.5);
+
+	--gr-accent: #ff7043;
+	--gr-accent-hover: #ff8a63;
+	--gr-accent-soft: #2a150e;
+	--gr-accent-text: #ff9d7a;
+	--gr-on-accent: #1a0a04;
+	--gr-focus: #ff8a63;
+
+	--gr-ok: #2bbd7e;
+	--gr-ok-text: #5fd6a4;
+	--gr-on-ok: #052014;
+	--gr-warn: #d99a3a;
+	--gr-warn-text: #e6b870;
+	--gr-danger: #f0546a;
+	--gr-danger-text: #ff8b9c;
+
+	--sl-color-white: var(--gr-text-1);
+	--sl-color-gray-1: var(--gr-text-1);
+	--sl-color-gray-2: var(--gr-text-2);
+	--sl-color-gray-3: var(--gr-text-3);
+	--sl-color-gray-4: var(--gr-text-4);
+	--sl-color-gray-5: var(--gr-border);
+	--sl-color-gray-6: var(--gr-border-strong);
+	--sl-color-gray-7: var(--gr-surface-3);
+	--sl-color-black: var(--gr-bg);
+
+	--sl-color-accent-low: var(--gr-accent-soft);
+	--sl-color-accent: var(--gr-accent);
+	--sl-color-accent-high: var(--gr-accent-text);
+
+	--sl-color-text: var(--gr-text-2);
+	--sl-color-text-accent: var(--gr-accent-text);
+	--sl-color-text-invert: var(--gr-on-accent);
+
+	--sl-color-bg: var(--gr-bg);
+	--sl-color-bg-nav: rgb(12 12 12 / 0.78);
+	--sl-color-bg-sidebar: transparent;
+	--sl-color-bg-inline-code: var(--gr-surface-2);
+	--sl-color-bg-accent: var(--gr-accent);
+
+	--sl-color-hairline-light: var(--gr-border);
+	--sl-color-hairline: var(--gr-border);
+	--sl-color-hairline-shade: var(--gr-border);
+
+	--sl-color-backdrop-overlay: rgb(0 0 0 / 0.6);
+	--sl-shadow-sm: var(--gr-shadow-sm);
+	--sl-shadow-md: var(--gr-shadow-md);
+	--sl-shadow-lg: var(--gr-shadow-lg);
+}
+
+/* ================================================================= base == */
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+/* The two weights below carry the whole signal/terminal hierarchy in this UI. */
+:root[data-theme='dark'] body {
+	font-weight: 400;
+}
+.sl-markdown-content {
+	--sl-text-h1: 2rem;
+	--sl-text-h2: 1.5rem;
+	--sl-text-h3: 1.25rem;
+	--sl-text-h4: 1.0625rem;
+	--sl-text-h5: 1rem;
+	--sl-text-h6: 0.875rem;
+	--sl-text-xs: 0.75rem;
+	--sl-text-sm: 0.8125rem;
+	--sl-text-base: 0.9375rem;
+	--sl-text-lg: 1.0625rem;
+	--sl-text-xl: 1.25rem;
+	--sl-text-2xl: 1.5rem;
+	--sl-text-3xl: 1.875rem;
+}
+
+/* =============================================================== header == */
+
+/* Sticky, blurred, hairline-bottom. The blur is paired with a translucent fill and a
+   inner highlight so it reads as a surface, not as a smudge. */
+.header {
+	border-bottom: 1px solid var(--gr-border);
+	background: var(--sl-color-bg-nav);
+	backdrop-filter: saturate(180%) blur(12px);
+	-webkit-backdrop-filter: saturate(180%) blur(12px);
+	box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-theme='light'] .header {
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+.site-title {
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+.site-title img {
+	height: 1.5rem;
+	width: auto;
+}
+
+/* Search lives in the header; give it room and make it feel like a field, not a button. */
+.header :is(#site-search, .site-search) {
+	margin-inline-start: auto;
+}
+
+/* ============================================================== sidebar == */
+
+#starlight__sidebar .sidebar-content {
+	padding-block: var(--gr-space-6) var(--gr-space-9);
+}
+
+#starlight__sidebar h2 {
+	font-family: var(--gr-mono);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--gr-text-4);
+}
+
+#starlight__sidebar a:not([aria-current='page']) {
+	color: var(--gr-text-3);
+	transition:
+		color var(--gr-dur-fast) var(--gr-ease),
+		background-color var(--gr-dur-fast) var(--gr-ease);
+}
+#starlight__sidebar a:not([aria-current='page']):hover,
+#starlight__sidebar a:not([aria-current='page']):focus-visible {
+	color: var(--gr-text-1);
+}
+
+/* Active route: a solid accent bar, not a filled chip. A filled chip says "button";
+   this says "you are here". */
+#starlight__sidebar [aria-current='page'] {
+	position: relative;
+	background: transparent;
+	color: var(--gr-text-1);
+	font-weight: 600;
+}
+#starlight__sidebar [aria-current='page']::before {
+	content: '';
+	position: absolute;
+	inset-block: 0.35em;
+	inset-inline-start: -1rem;
+	width: 2px;
+	border-radius: var(--gr-radius-pill);
+	background: var(--gr-accent);
+}
+#starlight__sidebar [aria-current='page']:hover,
+#starlight__sidebar [aria-current='page']:focus-visible {
+	background: transparent;
+	color: var(--gr-text-1);
+}
+
+/* ====================================================== right-hand TOC == */
+/* Anchor styling lives in `src/components/PageSidebar.astro`, where it outranks
+   Starlight's own component CSS. */
+
+/* ============================================================ typography == */
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+	font-weight: 700;
+	letter-spacing: -0.022em;
+	color: var(--gr-text-1);
+	text-wrap: balance;
+}
+/* Light on dark needs more weight and a touch of tracking to hit the same colour. */
+:root[data-theme='dark'] .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+	letter-spacing: -0.014em;
+}
+
+/* An anchor that only appears on hover keeps the measure clean but still gives
+   keyboard users a persistent target. */
+.sl-markdown-content :is(h2, h3, h4, h5, h6) > a {
+	opacity: 0;
+	text-decoration: none;
+	color: var(--gr-text-4);
+	margin-inline-start: 0.35em;
+	transition: opacity var(--gr-dur-fast) var(--gr-ease);
+}
+.sl-markdown-content :is(h2, h3, h4, h5, h6):hover > a,
+.sl-markdown-content :is(h2, h3, h4, h5, h6) > a:focus-visible {
+	opacity: 1;
+}
+
+.sl-markdown-content a:not(:where(.not-content *, .site-title *)) {
+	color: var(--gr-accent-text);
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+	text-decoration-thickness: 1px;
+	text-decoration-color: color-mix(in srgb, var(--gr-accent) 40%, transparent);
+	transition: text-decoration-color var(--gr-dur-fast) var(--gr-ease);
+}
+.sl-markdown-content a:not(:where(.not-content *, .site-title *)):hover {
+	text-decoration-color: currentColor;
+}
+
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
+	background: var(--gr-surface-2);
+	border: 1px solid var(--gr-border);
+	border-radius: var(--gr-radius-sm);
+	padding: 0.1em 0.35em;
+	font-family: var(--gr-mono);
+	font-size: 0.85em;
+	font-weight: 500;
+	color: var(--gr-text-1);
+	/* `anywhere` split "questions" into "question / s". Inside a table cell the
+	   identifier must be able to move to its own line whole, or the cell wraps
+	   mid-word. `break-word` only breaks when the token cannot fit at all. */
+	overflow-wrap: break-word;
+	word-break: normal;
+}
+
+/* A run of adjacent inline code should join, not stack. */
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)):not(:first-child) {
+	margin-inline-start: -1px;
+}
+
+/* =============================================================== buttons == */
+
+.sl-link-button {
+	border-radius: var(--gr-radius-pill);
+	font-weight: 600;
+	font-size: 0.9375rem;
+	letter-spacing: -0.008em;
+	min-height: 2.75rem;
+	padding-inline: 1.25rem;
+	transition:
+		background-color var(--gr-dur) var(--gr-ease),
+		border-color var(--gr-dur) var(--gr-ease),
+		color var(--gr-dur) var(--gr-ease),
+		opacity var(--gr-dur) var(--gr-ease);
+}
+.sl-link-button.primary {
+	background: var(--gr-accent);
+	border-color: var(--gr-accent);
+	color: var(--gr-on-accent);
+}
+.sl-link-button.primary:hover {
+	background: var(--gr-accent-hover);
+	border-color: var(--gr-accent-hover);
+	color: var(--gr-on-accent);
+}
+.sl-link-button.secondary {
+	background: var(--gr-surface-1);
+	border-color: var(--gr-border-strong);
+	color: var(--gr-text-1);
+}
+.sl-link-button.secondary:hover {
+	background: var(--gr-surface-3);
+	border-color: var(--gr-text-4);
+	color: var(--gr-text-1);
+}
+
+/* ================================================================ cards == */
+
+/* A link card that is a card: hairline, flat at rest, lift on hover. */
+.card,
+.sl-link-card {
+	border: 1px solid var(--gr-border);
+	border-radius: var(--gr-radius-md);
+	background: var(--gr-surface-1);
+	box-shadow: none;
+	transition:
+		border-color var(--gr-dur) var(--gr-ease),
+		box-shadow var(--gr-dur) var(--gr-ease),
+		transform var(--gr-dur) var(--gr-ease);
+}
+.card:hover,
+.sl-link-card:hover {
+	border-color: var(--gr-border-strong);
+	background: var(--gr-surface-1);
+	box-shadow: var(--gr-shadow-md);
+	transform: translateY(-2px);
+}
+.card .title,
+.sl-link-card .title {
+	font-size: 1rem;
+	font-weight: 700;
+	letter-spacing: -0.018em;
+	color: var(--gr-text-1);
+}
+.sl-link-card .description {
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: var(--gr-text-3);
+}
+/* The decorative icon per card is noise here — the card already has a name. */
+.sl-link-card .icon {
+	border-color: transparent;
+	background: transparent;
+	color: var(--gr-text-4);
+}
+
+/* ================================================================= tabs == */
+
+starlight-tabs {
+	border: 1px solid var(--gr-border);
+	border-radius: var(--gr-radius-md);
+	background: var(--gr-surface-1);
+	overflow: hidden;
+}
+starlight-tabs [role='tablist'] {
+	padding: 0.35rem;
+	gap: 0.15rem;
+	background: var(--gr-surface-2);
+	border-bottom: 1px solid var(--gr-border);
+}
+starlight-tabs .tab > [role='tab'] {
+	border-radius: var(--gr-radius-sm);
+	padding: 0.4rem 0.75rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	letter-spacing: -0.005em;
+	color: var(--gr-text-3);
+	transition:
+		background-color var(--gr-dur-fast) var(--gr-ease),
+		color var(--gr-dur-fast) var(--gr-ease);
+}
+starlight-tabs .tab > [role='tab']:hover {
+	background: var(--gr-surface-3);
+	color: var(--gr-text-1);
+}
+starlight-tabs .tab [role='tab'][aria-selected='true'] {
+	--sl-tab-color-border: transparent;
+	background: var(--gr-surface-1);
+	color: var(--gr-text-1);
+	box-shadow: var(--gr-shadow-sm);
+}
+starlight-tabs .tabpanel {
+	padding: 0.75rem 0.5rem 0;
+}
+
+/* =========================================================== code blocks == */
+
+/* Wire data, so: monospace, quiet surface, a real frame, and a copy affordance that
+   is present rather than revealed on hover. */
+:root[data-theme='light'] .expressive-code {
+	--ec-brdRad: var(--gr-radius-md);
+	--ec-brdCol: var(--gr-border);
+	--ec-codeBg: var(--gr-surface-2);
+	--ec-codeFg: #1c1c22;
+	--ec-frm-edBg: var(--gr-surface-2);
+	--ec-frm-edTabBarBg: var(--gr-surface-2);
+	--ec-frm-edTabBarBrdCol: var(--gr-border);
+	--ec-frm-edTabBarBrdBtmCol: var(--gr-border);
+	--ec-frm-edActTabBg: var(--gr-surface-1);
+	--ec-frm-edActTabFg: var(--gr-text-1);
+	--ec-frm-edActTabIndTopCol: var(--gr-accent);
+	--ec-frm-frameBoxShdCssVal: none;
+	--ec-frm-tooltipSuccessBg: var(--gr-ok);
+	--ec-frm-tooltipSuccessFg: var(--gr-on-ok);
+}
+:root[data-theme='dark'] .expressive-code {
+	--ec-brdRad: var(--gr-radius-md);
+	--ec-brdCol: var(--gr-border);
+	--ec-codeBg: var(--gr-surface-2);
+	--ec-codeFg: #e6e6ec;
+	--ec-frm-edBg: var(--gr-surface-2);
+	--ec-frm-edTabBarBg: var(--gr-surface-2);
+	--ec-frm-edTabBarBrdCol: var(--gr-border);
+	--ec-frm-edTabBarBrdBtmCol: var(--gr-border);
+	--ec-frm-edActTabBg: var(--gr-surface-1);
+	--ec-frm-edActTabFg: var(--gr-text-1);
+	--ec-frm-edActTabIndTopCol: var(--gr-accent);
+	--ec-frm-frameBoxShdCssVal: none;
+	--ec-frm-tooltipSuccessBg: var(--gr-ok);
+	--ec-frm-tooltipSuccessFg: var(--gr-on-ok);
+}
+
+/* ======================================================== admonitions == */
+
+/* A left rule plus a near-neutral fill: the tint stays under 4% so the type leads. */
+.starlight-aside {
+	border: 1px solid var(--gr-border);
+	border-inline-start-width: 3px;
+	border-radius: var(--gr-radius-md);
+	background: var(--gr-surface-2);
+	font-size: 0.9375rem;
+}
+.starlight-aside .starlight-aside__title {
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+.starlight-aside--note {
+	border-inline-start-color: var(--gr-accent);
+	background: var(--gr-accent-soft);
+}
+.starlight-aside--tip {
+	border-inline-start-color: var(--gr-ok);
+	background: color-mix(in srgb, var(--gr-ok) 6%, var(--gr-surface-1));
+}
+.starlight-aside--caution {
+	border-inline-start-color: var(--gr-warn);
+	background: color-mix(in srgb, var(--gr-warn) 7%, var(--gr-surface-1));
+}
+.starlight-aside--danger {
+	border-inline-start-color: var(--gr-danger);
+	background: color-mix(in srgb, var(--gr-danger) 7%, var(--gr-surface-1));
+}
+:root[data-theme='light'] .starlight-aside--note {
+	background: color-mix(in srgb, var(--gr-accent) 5%, var(--gr-surface-1));
+}
+
+/* =============================================================== tables == */
+
+/* Wide reference tables cannot shrink below their content on a phone. Rather than
+   letting them clip, the table scrolls inside its own edge. The fade only appears
+   when there is actually more to see — `data-scroll` is set by the script at the
+   bottom of this file — so a short table never looks truncated. */
+.sl-markdown-content :is(table) {
+	display: block;
+	overflow-x: auto;
+	max-width: 100%;
+	-webkit-overflow-scrolling: touch;
+	font-size: 0.875rem;
+	border-radius: var(--gr-radius-sm);
+}
+.sl-markdown-content :is(table)[data-scroll] {
+	mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 3rem), transparent 100%);
+}
+.sl-markdown-content :is(table)[data-scroll='start'] {
+	mask-image: linear-gradient(to right, transparent 0, #000 3rem, #000 100%);
+}
+.sl-markdown-content :is(table)[data-scroll='both'] {
+	mask-image: linear-gradient(
+		to right,
+		transparent 0,
+		#000 3rem,
+		#000 calc(100% - 3rem),
+		transparent 100%
+	);
+}
+
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+	border-bottom: 1px solid var(--gr-border);
+	padding: 0.6rem 0.75rem;
+}
+.sl-markdown-content :is(th):not(:where(.not-content *)) {
+	background: var(--gr-surface-2);
+	font-family: var(--gr-mono);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--gr-text-3);
+	border-bottom: 1px solid var(--gr-border-strong);
+	white-space: nowrap;
+}
+.sl-markdown-content :is(tbody tr:hover td) {
+	background: var(--gr-surface-2);
+}
+/* Field and method names are wire data, so they get the mono face. Only a code span
+   is forced to mono — applying it to a whole cell made long words break mid-word
+   ("instructi / ons") because mono has no useful break opportunities. */
+.sl-markdown-content :is(td) > code,
+.sl-markdown-content :is(th) > code {
+	font-size: 0.8125rem;
+}
+/* Long values still get a break rather than forcing the table wider. */
+.sl-markdown-content :is(td) {
+	overflow-wrap: break-word;
+}
+/* The route table's path column carries a long templated URL. Letting it wrap inside
+   the code chip broke the last column out of line, so the chip moves to its own row
+   and stays readable instead. */
+.sl-markdown-content :is(td) > code {
+	white-space: normal;
+}
+
+/* ============================================================== misc == */
+
+.sl-markdown-content hr {
+	border-color: var(--gr-border);
+}
+
+/* Lists keep a hairline and a real marker rather than a filled dot. */
+.sl-markdown-content :is(ul, ol) {
+	padding-inline-start: 1.25rem;
+}
+.sl-markdown-content :is(li)::marker {
+	color: var(--gr-text-4);
+}
+.sl-markdown-content :is(li + li) {
+	margin-block-start: 0.35rem;
+}
+
+.sl-markdown-content blockquote {
+	border-inline-start: 2px solid var(--gr-border-strong);
+	color: var(--gr-text-3);
+	font-style: normal;
+}
+
+/* YouTube embeds: put them on the same grid as everything else. */
+.sl-markdown-content iframe,
+.sl-markdown-content .yt-embed {
+	border-radius: var(--gr-radius-md);
+	overflow: hidden;
+	border: 1px solid var(--gr-border);
+}
+
+/* Pagination: a comparison surface — equal-width, method-like, not two big buttons. */
+.pagination-links {
+	border-top: 1px solid var(--gr-border);
+	padding-block: var(--gr-space-6);
+	gap: var(--gr-space-4);
+}
+.pagination-links a {
+	border: 1px solid var(--gr-border);
+	border-radius: var(--gr-radius-md);
+	padding: 0.875rem 1rem;
+	font-size: 0.875rem;
+	background: var(--gr-surface-1);
+	transition:
+		border-color var(--gr-dur) var(--gr-ease),
+		background-color var(--gr-dur) var(--gr-ease);
+}
+.pagination-links a:hover {
+	border-color: var(--gr-border-strong);
+	background: var(--gr-surface-2);
+}
+.pagination-links .pagination-label {
+	font-family: var(--gr-mono);
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--gr-text-4);
+}
+
+/* ============================================================== a11y == */
+
+/* One focus treatment, site-wide: 2px, offset, accent, and never removed. */
+:where(a, button, input, summary, [tabindex]):focus-visible {
+	outline: 2px solid var(--gr-focus);
+	outline-offset: 2px;
+	border-radius: var(--gr-radius-sm);
+}
+/* Heading anchors sit flush, so pull their ring inward instead. */
+.sl-markdown-content :is(h2, h3, h4) > a:focus-visible {
+	outline-offset: 1px;
+}
+
+.sl-markdown-content :is(a, button, summary):focus:not(:focus-visible) {
+	outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}

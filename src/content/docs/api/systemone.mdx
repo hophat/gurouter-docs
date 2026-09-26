@@ -1,0 +1,120 @@
+---
+title: SystemOne
+description: POST /v1/systemone — a non-chat, non-streaming decision endpoint backed by the typesafe/jev model.
+---
+
+import SpecList from '../../../components/SpecList.astro';
+
+SystemOne is a decision endpoint. Unlike chat, it is **not conversational** and **does not
+stream**. You describe a situation once, ask one or more structured choice questions, and
+get back the selected choice, a confidence score, and per-option probabilities.
+
+## Endpoint
+
+<SpecList
+	rows={[
+		{ label: 'Method', value: 'POST' },
+		{ label: 'Path', value: '/v1/systemone' },
+		{ label: 'Model', value: 'typesafe/jev' },
+		{ label: 'Streaming', value: 'false' },
+		{ label: 'Chat', value: 'false' },
+	]}
+/>
+
+## Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | string | Yes | The decision model. Use `typesafe/jev`. |
+| `state` | string | Yes | A description of the situation the decision is made against. |
+| `questions` | object | Yes | Questions keyed by an id you choose. Each key becomes the id in the response `answers`. |
+
+Each value in `questions` is a choice question:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | string | Yes | The question type. Use `"choice"`. |
+| `instructions` | string | Yes | The question to answer, phrased as an instruction. |
+| `options` | string[] | Yes | The options the model chooses between. |
+| `criteria` | object | Yes | A record mapping each option to its decision criterion — the condition under which that option should be chosen. |
+
+## Example
+
+Request:
+
+```bash
+curl https://gurouter.com/v1/systemone \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "typesafe/jev",
+    "state": "The production deploy finished cleanly with zero downtime and all health checks passing.",
+    "questions": {
+      "deploy_success": {
+        "type": "choice",
+        "instructions": "Did the deploy succeed?",
+        "options": ["yes", "no"],
+        "criteria": {
+          "yes": "The state describes a deploy that completed without errors, downtime, or failing health checks.",
+          "no": "The state describes a deploy that failed, had downtime, or had failing health checks."
+        }
+      }
+    }
+  }'
+```
+
+Response (`200 OK`):
+
+```json
+{
+  "model": "typesafe/jev",
+  "answers": {
+    "deploy_success": {
+      "type": "choice",
+      "choice": "yes",
+      "confidence": 1,
+      "probabilities": {
+        "yes": 1,
+        "no": 0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 335,
+    "output_tokens": 32
+  }
+}
+```
+
+## Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `model` | string | The model that produced the answers. |
+| `answers` | object | Keyed by the same ids you sent in `questions`. |
+| `answers.<id>.type` | string | The question type, `"choice"`. |
+| `answers.<id>.choice` | string | The selected option. |
+| `answers.<id>.confidence` | number | Confidence in the selected choice, from `0` to `1`. |
+| `answers.<id>.probabilities` | object | A record mapping each option to its probability from `0` to `1`. |
+| `usage.input_tokens` | number | Input tokens billed for the request. |
+| `usage.output_tokens` | number | Output tokens billed for the response. |
+
+## Billing
+
+SystemOne is billed on both `usage.input_tokens` and `usage.output_tokens`. Read those
+fields from the response to account for the cost of each call.
+
+## Validation errors
+
+The endpoint validates the question structure. Two observed `400` responses:
+
+| Case | Status | Message | Param |
+| --- | --- | --- | --- |
+| Missing `instructions` | `400` | `Invalid input` | `questions.<id>.instructions` |
+| Missing `criteria` | `400` | `Invalid input: expected record, received undefined` | `questions.<id>.criteria` |
+
+:::caution
+The message and param strings above are the exact values observed from the live gateway
+for these two cases. Other validation failures may return different text — do not assume
+this page covers every error shape.
+:::

@@ -1,0 +1,64 @@
+---
+/**
+ * NotShipped — the honest empty state for a page whose product does not exist yet.
+ *
+ * The harness is planned but not released. A dead end that says "coming soon" teaches
+ * nothing and strands the reader, so this states the status, shows the shape of what is
+ * planned, and always exits toward a page that works.
+ */
+interface Props {
+	/** One sentence on what the thing is meant to be, and why it is not usable yet. */
+	lede: string;
+}
+
+const { lede } = Astro.props;
+---
+
+<div class="ship">
+	<div class="ship-badge">
+		<span class="ship-dot" aria-hidden="true"></span>
+		<span>Not shipped</span>
+	</div>
+	<p class="ship-lede">{lede}</p>
+</div>
+
+<style>
+	.ship {
+		display: grid;
+		gap: 0.75rem;
+		margin-block-end: var(--gr-space-9);
+		padding: 1.25rem;
+		border: 1px dashed var(--gr-border-strong);
+		border-radius: var(--gr-radius-lg);
+		background: var(--gr-surface-2);
+	}
+	.ship-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-self: start;
+		gap: 0.5rem;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid color-mix(in srgb, var(--gr-warn) 40%, transparent);
+		border-radius: var(--gr-radius-pill);
+		background: color-mix(in srgb, var(--gr-warn) 12%, transparent);
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--gr-warn-text);
+	}
+	.ship-dot {
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 999px;
+		background: currentColor;
+	}
+	.ship-lede {
+		margin: 0;
+		max-width: 60ch;
+		font-size: 1rem;
+		line-height: 1.55;
+		color: var(--gr-text-2);
+	}
+</style>

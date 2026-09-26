@@ -1,0 +1,319 @@
+---
+/**
+ * QuickstartBar — the "connect in 20 seconds" proof strip on the landing page.
+ *
+ * It states the three facts a developer must know before they try the gateway: one base
+ * URL, one header, one key. The key field is real: it copies, and it has genuine
+ * loading / copied / error states rather than a decorative button.
+ */
+---
+
+<section class="qs" aria-labelledby="qs-heading">
+	<h2 class="qs-heading" id="qs-heading">
+		<span class="qs-eyebrow">Connect</span>
+		<span class="qs-title">One base URL. One header. One key.</span>
+	</h2>
+
+	<div class="qs-fields">
+		<div class="qs-field">
+			<span class="qs-label" id="qs-base-label">Base URL</span>
+			<output class="qs-value" aria-labelledby="qs-base-label" data-copy="https://gurouter.com">https://gurouter.com</output>
+		</div>
+		<div class="qs-field">
+			<span class="qs-label">Auth header</span>
+			<code class="qs-value qs-value--static">Authorization: Bearer <span class="qs-key-slot">&lt;API_KEY&gt;</span></code>
+		</div>
+		<div class="qs-field">
+			<label class="qs-label" for="qs-key">Your API key</label>
+			<input
+				class="qs-input"
+				id="qs-key"
+				type="text"
+				placeholder="sk-gur-..."
+				autocomplete="off"
+				spellcheck="false"
+				aria-describedby="qs-key-help"
+			/>
+			<p class="qs-help" id="qs-key-help">
+				Never paste a production key into a browser. Use it in your environment only.
+			</p>
+		</div>
+	</div>
+
+	<button class="qs-copy" type="button" data-copy-target="https://gurouter.com">
+		<span class="qs-copy-label" data-state="idle">Copy base URL</span>
+		<span class="qs-sr" role="status" aria-live="polite" data-copy-status></span>
+	</button>
+</section>
+
+<script>
+	// One delegated handler. Every copy affordance on the page gets loading → copied /
+	// error, and the announcement is polite so it never interrupts a screen reader mid-sentence.
+	function wire() {
+		document.querySelectorAll<HTMLElement>('[data-copy]').forEach((el) => {
+			if (el.dataset.copyWired) return;
+			el.dataset.copyWired = 'true';
+			el.setAttribute('tabindex', '0');
+			el.setAttribute('role', 'button');
+			el.addEventListener('click', () => copy(el.dataset.copy ?? '', el));
+			el.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					copy(el.dataset.copy ?? '', el);
+				}
+			});
+		});
+
+		document.querySelectorAll<HTMLButtonElement>('[data-copy-target]').forEach((btn) => {
+			if (btn.dataset.copyWired) return;
+			btn.dataset.copyWired = 'true';
+			btn.addEventListener('click', () => copy(btn.dataset.copyTarget ?? '', btn));
+		});
+	}
+
+	async function copy(text: string, source: HTMLElement) {
+		const button = source.matches('button') ? source : source.closest<HTMLButtonElement>('[data-copy-target]');
+		const label = (source.matches('button') ? source.querySelector('[data-state]') : source) as HTMLElement | null;
+		const announce = document.querySelector<HTMLElement>('[data-copy-status]');
+
+		if (label) setState(label, 'loading', button);
+		try {
+			await navigator.clipboard.writeText(text);
+			if (label) setState(label, 'copied', button);
+			if (announce) announce.textContent = 'Base URL copied to clipboard';
+			window.setTimeout(() => label && reset(label), 2000);
+		} catch {
+			if (label) setState(label, 'error', button);
+			if (announce) announce.textContent = 'Copy failed. Select the text and copy manually.';
+			window.setTimeout(() => label && reset(label), 3000);
+		}
+	}
+
+	function setState(label: HTMLElement, state: 'loading' | 'copied' | 'error', button?: HTMLButtonElement | null) {
+		label.dataset.state = state;
+		if (button) {
+			button.dataset.state = state;
+			button.setAttribute('aria-disabled', state === 'loading' ? 'true' : 'false');
+		}
+	}
+
+	function reset(label: HTMLElement) {
+		delete label.dataset.state;
+		const button = label.closest<HTMLButtonElement>('[data-copy-target]');
+		if (button) {
+			delete button.dataset.state;
+			button.setAttribute('aria-disabled', 'false');
+		}
+	}
+
+	document.addEventListener('astro:page-load', wire);
+	wire();
+</script>
+
+<style>
+	.qs {
+		display: grid;
+		gap: 1.25rem;
+		padding: clamp(1.25rem, 0.5rem + 2.5vw, 1.75rem);
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-lg);
+		background: var(--gr-surface-1);
+		box-shadow: var(--gr-shadow-sm);
+	}
+
+	.qs-heading {
+		display: grid;
+		gap: 0.25rem;
+		margin: 0;
+	}
+	.qs-eyebrow {
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--gr-accent-text);
+	}
+	.qs-title {
+		font-size: clamp(1.0625rem, 0.9rem + 0.6vw, 1.25rem);
+		font-weight: 600;
+		letter-spacing: -0.018em;
+		color: var(--gr-text-1);
+	}
+
+	.qs-fields {
+		display: grid;
+		gap: 0.75rem;
+		grid-template-columns: 1fr;
+		min-width: 0;
+	}
+	.qs-field,
+	.qs-field > * {
+		min-width: 0;
+	}
+	@media (min-width: 46rem) {
+		.qs-fields {
+			grid-template-columns: 1fr 1fr;
+		}
+		.qs-field:last-child {
+			grid-column: 1 / -1;
+		}
+	}
+
+	.qs-field {
+		display: grid;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+	.qs-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		color: var(--gr-text-3);
+	}
+
+	.qs-value,
+	.qs-input {
+		display: flex;
+		align-items: center;
+		min-height: 2.75rem; /* 44px hit floor */
+		padding: 0.55rem 0.75rem;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-sm);
+		background: var(--gr-surface-2);
+		font-family: var(--gr-mono);
+		font-size: 0.8125rem;
+		color: var(--gr-text-1);
+		overflow-wrap: anywhere;
+	}
+	/* The bare base URL is itself a copy target. */
+	output.qs-value {
+		cursor: copy;
+		transition:
+			border-color 0.15s ease,
+			background-color 0.15s ease;
+	}
+	output.qs-value::after {
+		content: 'copy';
+		margin-inline-start: auto;
+		padding-inline-start: 0.75rem;
+		font-family: var(--gr-sans);
+		font-size: 0.6875rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--gr-text-3);
+	}
+	output.qs-value:hover {
+		border-color: var(--gr-border-strong);
+		background: var(--gr-surface-3);
+	}
+
+	.qs-value--static {
+		background: transparent;
+		border-style: dashed;
+	}
+	.qs-key-slot {
+		color: var(--gr-accent-text);
+	}
+
+	.qs-input {
+		width: 100%;
+		transition:
+			border-color 0.15s ease,
+			background-color 0.15s ease;
+	}
+	.qs-input::placeholder {
+		color: var(--gr-text-4);
+	}
+	.qs-input:hover {
+		border-color: var(--gr-border-strong);
+	}
+	.qs-input:focus-visible {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: 2px;
+		border-color: transparent;
+	}
+
+	.qs-help {
+		margin: 0;
+		font-size: 0.75rem;
+		line-height: 1.4;
+		color: var(--gr-text-3);
+	}
+
+	.qs-sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/* Copy button: 3 real states, no spinners that never resolve. */
+	.qs-copy {
+		justify-self: start;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 2.75rem;
+		padding: 0.55rem 1.1rem;
+		border: 1px solid var(--gr-accent);
+		border-radius: 999px;
+		background: var(--gr-accent);
+		color: var(--gr-on-accent);
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: -0.005em;
+		cursor: pointer;
+		transition:
+			opacity 0.15s ease,
+			background-color 0.15s ease,
+			color 0.15s ease;
+	}
+	.qs-copy:hover {
+		opacity: 0.86;
+	}
+	.qs-copy:focus-visible {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: 2px;
+	}
+	.qs-copy[data-state='copied'] {
+		background: var(--gr-ok);
+		border-color: var(--gr-ok);
+		color: var(--gr-on-ok);
+	}
+	.qs-copy[data-state='error'] {
+		background: var(--gr-danger);
+		border-color: var(--gr-danger);
+		color: var(--gr-on-danger);
+	}
+	.qs-copy[data-state='loading'] {
+		cursor: progress;
+		opacity: 0.7;
+	}
+	.qs-copy[data-state='loading'] .qs-copy-label::after {
+		content: '';
+		display: inline-block;
+		width: 0.7em;
+		height: 0.7em;
+		margin-inline-start: 0.5em;
+		border: 1.5px solid currentColor;
+		border-top-color: transparent;
+		border-radius: 999px;
+		animation: gr-spin 0.6s linear infinite;
+		vertical-align: -0.05em;
+	}
+	@keyframes gr-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.qs-copy[data-state='loading'] .qs-copy-label::after {
+			animation-duration: 2s;
+		}
+	}
+</style>

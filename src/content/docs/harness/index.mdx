@@ -1,0 +1,40 @@
+---
+title: GuRouter Harness
+description: An opinionated agent runtime harness on top of GuRouter. Not shipped yet.
+editUrl: false
+---
+
+import NotShipped from '../../../components/NotShipped.astro';
+import PlanRail from '../../../components/PlanRail.astro';
+import LiveInstead from '../../../components/LiveInstead.astro';
+
+<NotShipped
+	lede="Nothing on this page is live. The harness has no routes, no releases, and no stable configuration. It is listed so the structure is in place when it lands, not to imply you can call it today."
+/>
+
+## What is planned
+
+An opinionated agent runtime on top of GuRouter, so agents get a consistent execution model
+instead of every project assembling its own: a defined runtime, a predictable way to call
+models and decide, and shared conventions for tools and state.
+
+<PlanRail
+	steps={[
+		{ title: 'Setup', body: 'Installing the harness and connecting it to a GuRouter key and base URL.' },
+		{ title: 'Concepts', body: 'The runtime model: agents, tools, state, and the decision loop.' },
+		{ title: 'Guides', body: 'Task-oriented walkthroughs for common agent workflows.' },
+		{ title: 'Reference', body: 'Commands, configuration, and the full API surface.' },
+	]}
+/>
+
+## Until then
+
+These pages cover what the gateway does today.
+
+<LiveInstead
+	links={[
+		{ href: '/getting-started/agents/', title: 'Agent setup', body: 'Base URL, auth, and chat in curl, Python, and Node.' },
+		{ href: '/api/openai-compat/', title: 'API reference', body: 'Every route verified against the live gateway.' },
+		{ href: '/api/systemone/', title: 'SystemOne', body: 'Structured decisions with confidence and probabilities.' },
+	]}
+/>

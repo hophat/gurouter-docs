@@ -1,0 +1,243 @@
+---
+/**
+ * PageSidebar — "on this page" plus the route contract of the current document.
+ *
+ * A gateway's docs live or die by knowing which endpoints are verified. Every page here
+ * carries its own route contract, so the TOC panel shows it alongside the section list
+ * instead of leaving the reader to hunt for it in prose.
+ */
+import TableOfContents from 'virtual:starlight/components/TableOfContents';
+import MobileTableOfContents from 'virtual:starlight/components/MobileTableOfContents';
+
+const { entry } = Astro.locals.starlightRoute;
+const { data } = entry;
+
+/** Route contract per page. `planned` marks a surface that does not exist yet. */
+const ROUTES: Record<string, { method: string; path: string; state: 'live' | 'planned' }[]> = {
+	'/getting-started/agents/': [
+		{ method: 'GET', path: '/v1/models', state: 'live' },
+		{ method: 'POST', path: '/v1/chat/completions', state: 'live' },
+		{ method: 'POST', path: '/v1/messages', state: 'live' },
+		{ method: 'POST', path: '/v1/responses', state: 'live' },
+	],
+	'/getting-started/cli-setup/': [
+		{ method: 'POST', path: '/v1/messages', state: 'live' },
+		{ method: 'POST', path: '/v1/responses', state: 'live' },
+		{ method: 'POST', path: '/v1beta/models/{model}:generateContent', state: 'live' },
+	],
+	'/api/openai-compat/': [
+		{ method: 'GET', path: '/v1/models', state: 'live' },
+		{ method: 'POST', path: '/v1/chat/completions', state: 'live' },
+	],
+	'/api/systemone/': [{ method: 'POST', path: '/v1/systemone', state: 'live' }],
+	'/harness/': [{ method: 'SOON', path: 'No routes published', state: 'planned' }],
+};
+
+const routes = ROUTES[entry.slug] ?? [];
+const isSplash = data.template === 'splash' || entry.slug === '/';
+const anyPlanned = routes.some((r) => r.state === 'planned');
+---
+
+{
+	!isSplash && (
+		<>
+			{/* Mobile: the TOC is a disclosure, so the route contract belongs inside it. */}
+			<div class="lg:sl-hidden">
+				<MobileTableOfContents />
+				{routes.length > 0 && (
+					<details class="gr-routes gr-routes--mobile">
+						<summary>Routes on this page</summary>
+						<ul class="route-list">
+							{routes.map((r) => (
+								<li class="route-item" data-state={r.state}>
+									<span class="route-method">{r.method}</span>
+									<span class="route-path">{r.path}</span>
+								</li>
+							))}
+						</ul>
+					</details>
+				)}
+			</div>
+
+			<div class="right-sidebar-panel sl-hidden lg:sl-block">
+				<div class="sl-container">
+					<TableOfContents />
+
+					{routes.length > 0 && (
+						<div class="gr-routes">
+							<h2 class="gr-routes-heading">Routes on this page</h2>
+							<ul class="route-list">
+								{routes.map((r) => (
+									<li class="route-item" data-state={r.state}>
+										<span class="route-method">{r.method}</span>
+										<span class="route-path">{r.path}</span>
+									</li>
+								))}
+							</ul>
+							<p class="gr-routes-foot">
+								{anyPlanned ? 'Nothing on this page is live yet.' : 'Verified against the live gateway.'}
+							</p>
+						</div>
+					)}
+				</div>
+			</div>
+		</>
+	)
+}
+
+<style>
+	/* Match Starlight's panel padding exactly. The container is only pinned to the
+	   sidebar width on large screens: applying that width below the breakpoint forces a
+	   300px column onto a 320px viewport and the whole page overflows sideways. */
+	.right-sidebar-panel {
+		padding: 1rem var(--sl-sidebar-pad-x);
+	}
+	.sl-container {
+		width: 100%;
+		max-width: calc(var(--sl-sidebar-width) - 2 * var(--sl-sidebar-pad-x));
+	}
+	@media (min-width: 72rem) {
+		.sl-container {
+			max-width: calc(
+				(
+						(
+								100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - 2 *
+									var(--sl-sidebar-pad-x)
+							) * 0.25
+					)
+				);
+		}
+	}
+
+	/* These live here rather than in `custom.css` because Starlight's own component
+	   styles ship after the custom stylesheet, so a rule in `custom.css` loses the
+	   cascade. Scoped component styles come later in the document and win.
+	   The TOC is navigation, not prose: it stays neutral until it is the current
+	   section, so no link reads as "active" by default. */
+	.right-sidebar-panel :global(a) {
+		display: block;
+		padding: 0.2rem 0 0.2rem 0.6rem;
+		border-inline-start: 2px solid transparent;
+		font-size: 0.8125rem;
+		line-height: 1.4;
+		color: var(--gr-text-3);
+		text-decoration: none;
+		transition:
+			color var(--gr-dur-fast) var(--gr-ease),
+			border-color var(--gr-dur-fast) var(--gr-ease);
+	}
+	.right-sidebar-panel :global(a:hover) {
+		color: var(--gr-text-1);
+	}
+	/* Current section carries an accent bar and weight, so state is never color alone. */
+	.right-sidebar-panel :global(a[aria-current='location']) {
+		color: var(--gr-accent-text);
+		border-inline-start-color: var(--gr-accent);
+		font-weight: 600;
+	}
+	.right-sidebar-panel :global(a:focus-visible) {
+		outline: 2px solid var(--gr-focus);
+		outline-offset: 2px;
+		border-radius: var(--gr-radius-sm);
+	}
+	@media (min-width: 72rem) {
+		.sl-container {
+			max-width: calc(
+				(
+						(
+								100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - 2 *
+									var(--sl-sidebar-pad-x)
+							) * 0.25
+					)
+				);
+		}
+	}
+
+	/* Route contract: a comparison surface, so a stable method column and fixed paths,
+	   not free-flowing prose. */
+	.gr-routes {
+		margin-top: 1.75rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--gr-border);
+	}
+	.gr-routes-heading {
+		margin: 0 0 0.6rem;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--gr-text-4);
+	}
+	.route-list {
+		display: grid;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.route-item {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: baseline;
+		gap: 0.5rem;
+		padding: 0.3rem 0.45rem;
+		border: 1px solid var(--gr-border);
+		border-radius: var(--gr-radius-sm);
+		background: var(--gr-surface-2);
+	}
+	.route-method {
+		font-family: var(--gr-mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: var(--gr-ok-text);
+	}
+	.route-path {
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		line-height: 1.35;
+		color: var(--gr-text-2);
+		overflow-wrap: anywhere;
+	}
+	.route-item[data-state='planned'] {
+		border-style: dashed;
+	}
+	.route-item[data-state='planned'] .route-method,
+	.route-item[data-state='planned'] .route-path {
+		color: var(--gr-text-4);
+	}
+	.gr-routes-foot {
+		margin: 0.6rem 0 0;
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		color: var(--gr-text-4);
+	}
+
+	/* Mobile disclosure reuses the same rows. */
+	.gr-routes--mobile {
+		margin: 0.5rem var(--sl-sidebar-pad-x);
+		border-top: 1px solid var(--gr-border);
+		padding-top: 0.75rem;
+	}
+	.gr-routes--mobile summary {
+		cursor: pointer;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--gr-text-2);
+		list-style: none;
+	}
+	.gr-routes--mobile summary::-webkit-details-marker {
+		display: none;
+	}
+	.gr-routes--mobile summary::before {
+		content: '+ ';
+		font-family: var(--gr-mono);
+		color: var(--gr-text-4);
+	}
+	.gr-routes--mobile[open] summary::before {
+		content: '− ';
+	}
+	.gr-routes--mobile .route-list {
+		margin-top: 0.5rem;
+	}
+</style>

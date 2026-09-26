@@ -1,0 +1,316 @@
+---
+/**
+ * RouteTrace — the hero proof object for GuRouter Docs.
+ *
+ * The domain artifact here is a *request*: one authenticated call travelling through a
+ * gateway and landing on a concrete model. The diagram animates that journey, then loops.
+ * It is intentionally not a generic "AI brain" or a grid of feature cards.
+ *
+ * The model name and the status are driven by props so a page can show a real trace
+ * (e.g. a streaming chat turn) instead of a decorative loop.
+ */
+interface Props {
+	/** Model id the request resolved to. */
+	model?: string;
+	/** Upstream provider label. */
+	provider?: string;
+	/** Status line shown in the terminal caption. */
+	status?: string;
+}
+
+const {
+	model = 'gpt-4o-mini',
+	provider = 'OpenAI',
+	status = '200 OK · 412 ms',
+} = Astro.props;
+---
+
+<div class="trace">
+	<div class="trace-frame">
+		<div class="trace-bar">
+			<span class="dot"></span><span class="dot"></span><span class="dot"></span>
+			<span class="trace-bar-label">POST /v1/chat/completions</span>
+		</div>
+
+		{/* The wire is a real grid cell between the nodes rather than an absolutely
+		    positioned overlay, so it can never drift out of alignment with the columns. */}
+		<div class="trace-grid">
+			<div class="node node--client">
+				<span class="node-kicker">your client</span>
+				<span class="node-name">OpenAI SDK</span>
+			</div>
+
+			<div class="wire" aria-hidden="true">
+				<span class="wire-line"></span>
+				<span class="wire-pulse"></span>
+			</div>
+
+			<div class="node node--gateway">
+				<span class="node-kicker">gateway</span>
+				<span class="node-name">gurouter.com</span>
+			</div>
+
+			<div class="wire" aria-hidden="true">
+				<span class="wire-line"></span>
+				<span class="wire-pulse"></span>
+			</div>
+
+			<div class="node node--upstream">
+				<span class="node-kicker">upstream</span>
+				<span class="node-name">{provider}</span>
+			</div>
+		</div>
+
+		<div class="trace-foot">
+			<span class="trace-model">{model}</span>
+			<span class="trace-status">{status}</span>
+		</div>
+	</div>
+</div>
+
+<style>
+	.trace {
+		--wire: color-mix(in srgb, var(--gr-accent) 34%, transparent);
+		--node-bg: var(--gr-surface-1);
+		--node-brd: var(--gr-border);
+		--node-fg: var(--gr-text-1);
+		--kicker-fg: var(--gr-text-3);
+	}
+
+	.trace-frame {
+		position: relative;
+		display: grid;
+		gap: 1.5rem;
+		padding: 1rem;
+		border: 1px solid var(--node-brd);
+		border-radius: var(--gr-radius-lg);
+		background:
+			radial-gradient(120% 90% at 50% -20%, var(--gr-accent-soft), transparent 62%),
+			var(--gr-surface-1);
+		box-shadow: var(--gr-shadow-md);
+		overflow: hidden;
+		container-type: inline-size;
+	}
+
+	/* Terminal chrome */
+	.trace-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--node-brd);
+	}
+	.dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 999px;
+		background: var(--gr-border-strong);
+	}
+	.trace-bar-label {
+		margin-inline-start: auto;
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		letter-spacing: -0.01em;
+		color: var(--kicker-fg);
+	}
+
+	/* Wire: node, wire, node, wire, node. The wire column is a fixed fraction so the
+	   diagram keeps its proportions at any width without an overlay. */
+	.trace-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 10% minmax(0, 1fr) 10% minmax(0, 1fr);
+		align-items: stretch;
+		gap: 0;
+		min-width: 0;
+	}
+	.wire {
+		position: relative;
+		align-self: center;
+		height: 1.5rem;
+		container-type: inline-size;
+	}
+	.wire-line {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline: 0;
+		height: 1px;
+		background: var(--wire);
+	}
+	.wire-pulse {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline-start: 0;
+		width: 1.75rem;
+		height: 1.5px;
+		margin-top: -0.75px;
+		border-radius: 999px;
+		background: var(--gr-accent);
+		opacity: 0;
+		animation: gr-pulse 2.8s var(--gr-ease) infinite;
+	}
+	/* The return leg starts after the outbound one has crossed. */
+	.wire:nth-of-type(4) .wire-pulse {
+		animation-delay: 1.4s;
+	}
+	@keyframes gr-pulse {
+		0% {
+			translate: 0 0;
+			opacity: 0;
+		}
+		15% {
+			opacity: 1;
+		}
+		60% {
+			translate: calc(100cqw - 1.75rem) 0;
+			opacity: 1;
+		}
+		75%,
+		100% {
+			translate: calc(100cqw - 1.75rem) 0;
+			opacity: 0;
+		}
+	}
+	@container (max-width: 20rem) {
+		.wire-pulse {
+			/* Too narrow to read a travelling dot; show direction as a static arrow. */
+			animation: none;
+			inset-inline-start: auto;
+			inset-inline-end: 0;
+			opacity: 0.7;
+		}
+	}
+
+	/* Nodes */
+	.node {
+		display: grid;
+		gap: 0.15rem;
+		justify-items: center;
+		text-align: center;
+		min-width: 0;
+		padding: 0.75rem 0.4rem;
+		border: 1px solid var(--node-brd);
+		border-radius: var(--gr-radius-sm);
+		background: var(--gr-surface-2);
+	}
+	.node-kicker {
+		font-family: var(--gr-mono);
+		font-size: 0.625rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--kicker-fg);
+	}
+	.node-name {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--node-fg);
+	}
+	.node--gateway {
+		border-color: color-mix(in srgb, var(--gr-accent) 42%, var(--node-brd));
+		background: var(--gr-accent-soft);
+	}
+	.node--gateway .node-name {
+		color: var(--gr-accent-text);
+	}
+
+	/* Footer caption */
+	.trace-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--node-brd);
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+	}
+	.trace-model {
+		color: var(--node-fg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.trace-status {
+		flex: none;
+		color: var(--gr-ok-text);
+	}
+	.trace-status::before {
+		content: '';
+		display: inline-block;
+		width: 0.4rem;
+		height: 0.4rem;
+		margin-inline-end: 0.4rem;
+		border-radius: 999px;
+		background: var(--gr-ok);
+		vertical-align: 0.05em;
+	}
+
+	/* The proof object reads as a diagram, not a stack, once there is room. */
+	@container (min-width: 22rem) {
+		.trace-frame {
+			gap: 1.75rem;
+			padding: 1.25rem;
+		}
+		.node {
+			padding: 0.9rem 0.6rem;
+		}
+		.node-name {
+			font-size: 0.9375rem;
+		}
+	}
+
+	/* Below that the three columns cannot hold a name each without forcing the whole
+	   page wider than the viewport, so the trace turns vertical and the wire becomes a
+	   connector. Same information, recomposed rather than compressed. */
+	@container (max-width: 21.99rem) {
+		.trace-grid {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0;
+		}
+		.wire {
+			height: 1.25rem;
+			/* A vertical run: centre the connector line over the label column. */
+			width: 1.5rem;
+			justify-self: center;
+		}
+		.wire-line {
+			inset-block: 0;
+			inset-inline: auto;
+			inset-inline-start: 50%;
+			width: 1px;
+			height: auto;
+		}
+		.wire-pulse {
+			display: none;
+		}
+		.node {
+			justify-items: start;
+			text-align: start;
+			width: 100%;
+		}
+		/* Once vertical, label the hop so the direction is unambiguous. */
+		.wire::after {
+			content: '';
+			position: absolute;
+			inset-block-start: 50%;
+			inset-inline-start: calc(50% + 0.4rem);
+			width: 0.3rem;
+			height: 0.3rem;
+			border-inline-end: 1.5px solid var(--wire);
+			border-block-end: 1.5px solid var(--wire);
+			transform: translateY(-50%) rotate(45deg);
+		}
+		.wire:last-of-type::after {
+			transform: translateY(-50%) rotate(-135deg);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.wire-pulse {
+			animation: none;
+			inset-inline-start: auto;
+			inset-inline-end: 0;
+			opacity: 0.7;
+		}
+	}
+</style>

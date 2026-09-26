@@ -1,0 +1,122 @@
+---
+/**
+ * PlanRail — a numbered, ordered sequence. Four steps in order get a rail with
+ * position markers, not four interchangeable cards.
+ */
+interface Props {
+	steps: { title: string; body: string }[];
+}
+
+const { steps } = Astro.props;
+---
+
+<ol class="rail">
+	{
+		steps.map((step, i) => (
+			<li class="rail-item">
+				<span class="rail-step" aria-hidden="true">
+					{String(i + 1).padStart(2, '0')}
+				</span>
+				<div class="rail-copy">
+					<h3 class="rail-title">{step.title}</h3>
+					<p class="rail-body">{step.body}</p>
+				</div>
+			</li>
+		))
+	}
+</ol>
+
+<style>
+	.rail {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0;
+		margin: var(--gr-space-6) 0 var(--gr-space-9);
+		padding: 0;
+		list-style: none;
+		border-top: 1px solid var(--gr-border);
+	}
+
+	.rail-item {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: start;
+		gap: 0.9rem;
+		padding: 1.15rem 0;
+		border-bottom: 1px solid var(--gr-border);
+	}
+
+	.rail-step {
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid var(--gr-border-strong);
+		border-radius: 999px;
+		background: var(--gr-surface-2);
+		font-family: var(--gr-mono);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: var(--gr-text-3);
+	}
+	.rail-item:first-child .rail-step {
+		border-color: var(--gr-accent);
+		background: var(--gr-accent-soft);
+		color: var(--gr-accent-text);
+	}
+
+	.rail-copy {
+		display: grid;
+		gap: 0.2rem;
+	}
+	.rail-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		color: var(--gr-text-1);
+	}
+	.rail-body {
+		margin: 0;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: var(--gr-text-3);
+	}
+
+	/* Two-up, then four-up, as the measure allows. The border moves to the inline
+	   start so the rail reads as a continuous edge. */
+	@media (min-width: 46rem) {
+		.rail {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.rail-item {
+			gap: 0.9rem;
+			padding: 1.15rem 1.25rem 1.15rem 0;
+			border-bottom: 0;
+		}
+		.rail-item:nth-child(even) {
+			padding-inline-start: 1.25rem;
+			border-inline-start: 1px solid var(--gr-border);
+		}
+		.rail-item:nth-child(-n + 2) {
+			border-bottom: 1px solid var(--gr-border);
+		}
+	}
+
+	@media (min-width: 72rem) {
+		.rail {
+			grid-template-columns: repeat(4, 1fr);
+		}
+		.rail-item:nth-child(even) {
+			padding-inline-start: 0;
+			border-inline-start: 0;
+		}
+		.rail-item + .rail-item {
+			padding-inline-start: 1.25rem;
+			border-inline-start: 1px solid var(--gr-border);
+		}
+		.rail-item:nth-child(-n + 2) {
+			border-bottom: 0;
+		}
+	}
+</style>

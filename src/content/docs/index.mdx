@@ -1,0 +1,110 @@
+---
+title: Overview
+description: GuRouter is an AI API gateway — OpenAI-compatible chat, Claude, Gemini, and the SystemOne decision model, behind one key and base URL.
+template: splash
+editUrl: false
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+hero:
+  title: One gateway. Every model.
+  tagline: Send OpenAI-compatible chat, Claude-style messages, Gemini requests, or a structured SystemOne decision — from one base URL, with one key.
+  actions:
+    - text: Get started
+      link: /getting-started/agents/
+      icon: rocket
+      variant: primary
+      iconPlacement: start
+    - text: API reference
+      link: /api/openai-compat/
+      icon: right-caret
+      variant: secondary
+---
+
+import { Card, CardGrid, Icon, LinkCard } from '@astrojs/starlight/components';
+import YouTubeEmbed from '../../components/YouTubeEmbed.astro';
+import QuickstartBar from '../../components/QuickstartBar.astro';
+import './_splash.css';
+
+GuRouter is an AI API gateway that puts multiple model families behind a single endpoint. Change the
+base URL and the key; keep the code you already wrote.
+
+## Connect
+
+<QuickstartBar />
+
+## What you can do
+
+<div class="surf-grid">
+	<section class="surf">
+		<div class="surf-head">
+			<Icon name="seti:http" size="1.25em" />
+			<code class="surf-method surf-method--live">POST</code>
+		</div>
+		<h3 class="surf-title">Chat completions</h3>
+		<p class="surf-body">
+			<code>POST /v1/chat/completions</code> takes an OpenAI request body and returns an OpenAI
+			response. Set <code>stream: true</code> for SSE. Your existing OpenAI SDKs work unchanged.
+		</p>
+		<a class="surf-more" href="/api/openai-compat/">OpenAI compatibility</a>
+	</section>
+
+	<section class="surf">
+		<div class="surf-head">
+			<Icon name="comment" size="1.25em" />
+			<code class="surf-method surf-method--live">POST</code>
+		</div>
+		<h3 class="surf-title">Claude and Gemini</h3>
+		<p class="surf-body">
+			The same gateway routes Anthropic Messages and Gemini <code>generateContent</code> request
+			shapes to their upstreams. Point Claude Code, Codex, or Gemini CLI at it and keep working.
+		</p>
+		<a class="surf-more" href="/getting-started/cli-setup/">CLI tools with CC Switch</a>
+	</section>
+
+	<section class="surf">
+		<div class="surf-head">
+			<Icon name="setting" size="1.25em" />
+			<code class="surf-method surf-method--live">POST</code>
+		</div>
+		<h3 class="surf-title">SystemOne</h3>
+		<p class="surf-body">
+			<code>POST /v1/systemone</code> is not a chat and does not stream. Describe a situation once
+			and get back a selected choice, a confidence score, and per-option probabilities.
+		</p>
+		<a class="surf-more" href="/api/systemone/">SystemOne reference</a>
+	</section>
+</div>
+
+## Start here
+
+<CardGrid>
+	<LinkCard
+		title="Agent setup"
+		href="/getting-started/agents/"
+		description="Base URL, auth, model listing, and chat in curl, Python, and Node."
+	/>
+	<LinkCard
+		title="API reference"
+		href="/api/openai-compat/"
+		description="Every verified route, and what is deliberately not documented yet."
+	/>
+	<LinkCard
+		title="CLI tools"
+		href="/getting-started/cli-setup/"
+		description="Claude Code, Codex CLI, and Gemini CLI through CC Switch or manual config."
+	/>
+	<Card title="Harness">
+		<p class="sl-markdown-content">
+			An opinionated agent runtime on top of GuRouter. Not shipped yet.
+		</p>
+		<a class="surf-more" href="/harness/">See what is planned</a>
+	</Card>
+</CardGrid>
+
+## Video tutorial
+
+<YouTubeEmbed id="HStwL7-AN10" title="GuRouter setup tutorial" />
+
+Prefer YouTube? Open
+[https://www.youtube.com/watch?v=HStwL7-AN10](https://www.youtube.com/watch?v=HStwL7-AN10).

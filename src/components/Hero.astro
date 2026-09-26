@@ -1,0 +1,124 @@
+---
+/**
+ * Hero override — the landing page's first viewport.
+ *
+ * Two changes over the stock hero:
+ *  1. The proof object in the right column is the real RouteTrace component, so it is
+ *     semantic and hydrates, instead of an HTML string baked into frontmatter.
+ *  2. Below 50rem the actions become full-width so the primary step stays reachable
+ *     in the thumb zone rather than sitting as a narrow inline pair.
+ */
+import { LinkButton } from '@astrojs/starlight/components';
+import DraftContentNotice from 'virtual:starlight/components/DraftContentNotice';
+import RouteTrace from './RouteTrace.astro';
+
+/** Starlight's page-title id. Inlined because `constants` is not a public export. */
+const PAGE_TITLE_ID = '_top';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero || {};
+---
+
+<div class="hero">
+	<div class="sl-flex stack">
+		<div class="sl-flex copy">
+			<h1 id={PAGE_TITLE_ID} data-page-title set:html={title} />
+			{data.draft && <DraftContentNotice />}
+			{tagline && <div class="tagline" set:html={tagline} />}
+		</div>
+		{
+			actions.length > 0 && (
+				<div class="sl-flex actions">
+					{actions.map(
+						({ attrs: { class: className, ...attrs } = {}, icon, link: href, text, variant }) => (
+							<LinkButton {href} {variant} icon={icon?.name} class:list={[className]} {...attrs}>
+								{text}
+								{icon?.html && <Fragment set:html={icon.html} />}
+							</LinkButton>
+						)
+					)}
+				</div>
+			)
+		}
+	</div>
+
+	<div class="hero-proof">
+		<RouteTrace model="gpt-4o-mini" provider="OpenAI" status="200 OK · 412 ms" />
+	</div>
+</div>
+
+<style>
+	@layer starlight.core {
+		.hero {
+			display: grid;
+			grid-template-columns: 100%;
+			align-items: center;
+			gap: var(--gr-space-6);
+			/* The Cliffhanger: stop short of a clean edge so the section below stays
+			   partly visible and the page reads as something you can keep scrolling. */
+			padding-block: clamp(1.75rem, 1rem + 4vmin, 3.5rem) clamp(1.5rem, 1rem + 3vmin, 2.75rem);
+		}
+
+		.stack {
+			flex-direction: column;
+			gap: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+			text-align: center;
+		}
+		.copy {
+			flex-direction: column;
+			gap: var(--gr-space-4);
+			align-items: center;
+		}
+		.copy > * {
+			max-width: 52ch;
+		}
+		.tagline {
+			font-size: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+			line-height: 1.55;
+			color: var(--gr-text-3);
+			text-wrap: pretty;
+		}
+		.actions {
+			gap: var(--gr-space-3);
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.hero-proof {
+			order: 2;
+			width: 100%;
+		}
+
+		@media (min-width: 50rem) {
+			.hero {
+				grid-template-columns: 1fr 0.82fr;
+				gap: 4%;
+				padding-block: clamp(2.5rem, calc(1rem + 5vmin), 5rem) clamp(2rem, 1.5rem + 3vmin, 3.5rem);
+			}
+			.stack {
+				text-align: start;
+			}
+			.copy {
+				align-items: flex-start;
+			}
+			.actions {
+				justify-content: flex-start;
+			}
+			.hero-proof {
+				order: 0;
+			}
+		}
+
+		/* Below the hero's breakpoint, actions span the column so the primary step
+		   is a full-width target in the thumb zone. */
+		@media (max-width: 49.999rem) {
+			.actions {
+				width: 100%;
+			}
+			.actions :global(.sl-link-button) {
+				flex: 1 1 12rem;
+				justify-content: center;
+			}
+		}
+	}
+</style>

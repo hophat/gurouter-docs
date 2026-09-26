@@ -1,0 +1,148 @@
+---
+title: CLI Tools with CC Switch
+description: Point Claude Code, Codex CLI, and Gemini CLI at GuRouter using the CC Switch app or manual config, with verified routes and smoke tests.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+GuRouter is a drop-in backend for the major coding CLIs. You can register it once with
+[CC Switch](https://ccswitch.io), a cross-platform desktop app (Windows, macOS, Linux;
+built with Tauri 2), and switch providers with one click — or wire each CLI by hand.
+
+CC Switch manages **Claude Code, Claude Desktop, Codex, Gemini CLI** and others. Its
+workflow is the same for every tool:
+
+1. Install CC Switch from [ccswitch.io](https://ccswitch.io) or the GitHub releases for
+   [`farion1231/cc-switch`](https://github.com/farion1231/cc-switch).
+2. Open the app and choose **Add Provider**.
+3. Pick your CLI's tab, then **Custom** (GuRouter is not one of the built-in presets).
+4. Enter **Base URL** `https://gurouter.com` and **API key** `<API_KEY>`.
+5. Activate the profile — one click, or from the tray menu.
+6. Restart your terminal/CLI after switching, **except Claude Code, which hot-switches**
+   and needs no restart.
+
+CC Switch keeps your profiles in `~/.cc-switch/` (a SQLite database). It only stores and
+rewrites each CLI's credentials — each request is still billed to the GuRouter account
+that owns `<API_KEY>`.
+
+## Verified routes
+
+Every CLI below is documented because its route answered an unauthenticated probe against
+`https://gurouter.com` with **401** (route exists) rather than **404** (route absent):
+
+| CLI | Route | Probe |
+| --- | --- | --- |
+| Claude Code | `POST /v1/messages` | 401 |
+| Codex CLI | `POST /v1/responses` | 401 |
+| Gemini CLI | `POST /v1beta/models/{model}:generateContent` | 401 |
+
+If a request returns `401 Unauthorized`, the key is missing or wrong. Billing for every
+call follows the account that owns the key.
+
+## Configure each CLI
+
+<Tabs>
+  <TabItem label="Claude Code">
+
+Claude Code speaks the Anthropic Messages API and calls `POST /v1/messages` on whatever
+base URL you give it.
+
+**CC Switch:** add a Custom provider with base URL `https://gurouter.com` and API key
+`<API_KEY>`. Claude Code hot-switches, so no terminal restart is needed.
+
+**Manual config** — set two environment variables:
+
+```bash
+export ANTHROPIC_BASE_URL="https://gurouter.com"
+export ANTHROPIC_AUTH_TOKEN="<API_KEY>"
+```
+
+Claude Code appends `/v1/messages` to the base URL automatically, so the base URL has no
+`/v1` suffix. `ANTHROPIC_AUTH_TOKEN` is sent as `Authorization: Bearer <API_KEY>`.
+
+**Smoke test:**
+
+```bash
+claude -p "Say hello in one sentence."
+```
+
+Billing for these calls follows the GuRouter account that owns `<API_KEY>`.
+
+  </TabItem>
+  <TabItem label="Codex CLI">
+
+Codex CLI reads `~/.codex/config.toml`. Define a provider and select it.
+
+**CC Switch:** add a Custom provider with API key `<API_KEY>`. If the Codex form asks for
+the OpenAI-compatible base that includes the API version, use
+`https://gurouter.com/v1`. Codex CLI needs a terminal restart after switching.
+
+**Manual config** — add to `~/.codex/config.toml`:
+
+```toml
+model = "<MODEL_ID>"
+model_provider = "gurouter"
+
+[model_providers.gurouter]
+name = "GuRouter"
+base_url = "https://gurouter.com/v1"
+env_key = "GURouter_API_KEY"
+wire_api = "responses"
+```
+
+Then export the key named by `env_key`:
+
+```bash
+export GURouter_API_KEY="<API_KEY>"
+```
+
+`wire_api = "responses"` uses the verified `POST /v1/responses` route. If you target a
+model that only supports chat, set `wire_api = "chat"` instead — that uses
+`POST /v1/chat/completions`, which is also verified.
+
+**Smoke test:**
+
+```bash
+codex exec "Say hello in one sentence."
+```
+
+Call `GET /v1/models` to find the exact `<MODEL_ID>`. Billing for these calls follows the
+GuRouter account that owns `<API_KEY>`.
+
+  </TabItem>
+  <TabItem label="Gemini CLI">
+
+Gemini CLI can send its native Gemini API requests through a custom base URL. It appends
+`/v1beta/models/{model}:generateContent` to that base.
+
+**CC Switch:** add a Custom provider with base URL `https://gurouter.com` and API key
+`<API_KEY>`. Gemini CLI needs a terminal restart after switching.
+
+**Manual config** — set two environment variables:
+
+```bash
+export GOOGLE_GEMINI_BASE_URL="https://gurouter.com"
+export GEMINI_API_KEY="<API_KEY>"
+```
+
+Gemini CLI adds the `/v1beta/models/...` path itself, so the base URL has no `/v1beta`
+suffix. You can also persist these in `.gemini/.env` in your project or home directory.
+
+**Smoke test:**
+
+```bash
+gemini -p "Say hello in one sentence."
+```
+
+Call `GET /v1beta/models` (or `GET /v1/models`) to see model IDs. Billing for these calls
+follows the GuRouter account that owns `<API_KEY>`.
+
+  </TabItem>
+</Tabs>
+
+## Notes
+
+- All examples use the placeholder `<API_KEY>`; never commit a real key to version
+  control.
+- Requests without a valid key are rejected with `401 Unauthorized`.
+- Only the routes listed above were verified against the live gateway.
