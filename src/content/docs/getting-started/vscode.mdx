@@ -32,41 +32,113 @@ needs — behind one key, and you can switch between them without leaving VS Cod
   [OpenAI-compatible provider](https://code.visualstudio.com/docs/copilot/customization/language-models)
   path.
 
-## The settings
+## The configuration
 
-Three values, and every one of them is copied from this page.
+VS Code takes a JSON array of custom endpoints, not a form. A working entry, with your
+key and base URL filled in:
+
+```json
+[
+  {
+    "name": "GU Router",
+    "vendor": "customendpoint",
+    "apiKey": "${input:chat.lm.secret.YOUR_SECRET_ID}",
+    "apiType": "chat-completions",
+    "models": [
+      {
+        "id": "stealth/space-bunny-alpha",
+        "name": "stealth/space-bunny-alpha",
+        "url": "https://gurouter.com/v1/chat/completions",
+        "apiType": "chat-completions",
+        "toolCalling": true,
+        "vision": true,
+        "maxInputTokens": 128000,
+        "maxOutputTokens": 16000
+      }
+    ]
+  }
+]
+```
+
+Paste that into `chatModels` in `settings.json`, then replace `YOUR_SECRET_ID` with the
+id of your own VS Code secret.
+
+### The fields that matter
 
 <SpecList
 	rows={[
-		{ label: 'Base URL', value: 'https://gurouter.com/v1' },
-		{ label: 'API key', value: 'your GuRouter key' },
-		{ label: 'Model', value: 'an id from /models/' },
+		{ label: 'vendor', value: 'customendpoint' },
+		{ label: 'apiType', value: 'chat-completions' },
+		{ label: 'apiKey', value: '${input:chat.lm.secret.…}' },
+		{ label: 'url', value: 'https://gurouter.com/v1/chat/completions' },
 	]}
 />
 
-The base URL ends in `/v1`. VS Code appends `/chat/completions` to whatever you give it, so
-`https://gurouter.com/v1` becomes `https://gurouter.com/v1/chat/completions`. Giving it
-`https://gurouter.com` instead produces a 404, which is the single most common cause of a
-"connection failed" here.
+- **`url` is the full endpoint**, ending in `/chat/completions`. Unlike some clients, VS
+  Code does not append the path for you. Leaving off `/chat/completions` gives a 404.
+- **`apiKey` is a secret reference, not a literal key.** `${input:chat.lm.secret.…}` points
+  at a secret stored in VS Code, so the key never lands in a file you might commit. See
+  [Secrets](#storing-your-key) below.
+- **`maxInputTokens` must be the real context size.** Set it too high and VS Code will
+  send a prompt the model cannot accept, which surfaces as a 400 rather than a useful
+  message.
+- **`toolCalling` and `vision` should match what the model actually does.** Claiming a
+  capability the model lacks produces a request that fails at the tool-call step.
+
+<Aside type="caution" title="Check the plan before using a model">
+	`stealth/space-bunny-alpha` in the example above is free, but it is only enabled on the
+	paid plans, not the default one. A model your key cannot reach returns a 400, which
+	reads like a typo rather than a permissions problem. Check
+	[models & pricing](/models/) for which plan unlocks a model.
+</Aside>
+
+## Storing your key
+
+Do not put a literal key in `settings.json`. VS Code keeps secrets separately and
+`${input:chat.lm.secret.…}` reads from there.
+
+The simplest path is `Preferences: Configure Chat Customizations`, which prompts for the
+key and writes the secret reference for you. To manage secrets directly, use
+`Chat: Store Chat Location Secret` and pass the id it reports.
+
+Keys belong in `settings.local.json`, which is git-ignored, and never in a committed
+`settings.json`.
 
 ## Set it up
 
 <Steps>
 
-1. **Open the BYOK settings.** Run `Preferences: Configure Chat Customizations` from the
-   command palette, or open `chatModels` in `settings.json`.
+1. **Store the key as a secret.** Run `Chat: Store Chat Location Secret` from the command
+   palette and give it your GuRouter key. Note the id it returns.
 
-2. **Add GuRouter as a provider.** Point the base URL at `https://gurouter.com/v1` and
-   paste your GuRouter key where it asks for an API key.
+2. **Open the BYOK settings.** Run `Preferences: Configure Chat Customizations`, or open
+   `chatModels` in `settings.json` directly.
 
-3. **Add a model.** The model id is the exact string from the
-   [models page](/models/) — including any vendor prefix, for example
-   `deepseek/deepseek-v4-flash`. A prefix that is part of the id must not be dropped.
+3. **Paste the configuration** from [The configuration](#the-configuration) above, with
+   your secret id in place of `YOUR_SECRET_ID`.
 
-4. **Send a message.** Pick the model from the Chat model picker and send anything. If the
+4. **Restart the chat window.** Run `Developer: Reload Window` so the new endpoints are
+   picked up.
+
+5. **Send a message.** Pick the model from the Chat model picker and send anything. If the
    reply comes back, the wiring is correct.
 
 </Steps>
+
+## Adding more models
+
+One provider entry can hold as many models as you like. Add another object to the `models`
+array rather than another provider — they share the key and the URL.
+
+```json
+"models": [
+  { "id": "stealth/space-bunny-alpha", "name": "Space Bunny", "url": "…", "apiType": "chat-completions", "maxInputTokens": 128000, "maxOutputTokens": 16000 },
+  { "id": "deepseek/deepseek-v4-flash", "name": "DeepSeek V4 Flash", "url": "…", "apiType": "chat-completions", "maxInputTokens": 1000000, "maxOutputTokens": 16000 }
+]
+```
+
+`name` is what appears in the model picker, so it can be shorter than the id. The `id` must
+stay exact. Copy ids from [models & pricing](/models/).
 
 ## Verify it outside VS Code
 
@@ -94,23 +166,26 @@ curl https://gurouter.com/v1/models \
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `404` on every request | Base URL is missing `/v1`, or already ends in `/chat/completions` | Set it to `https://gurouter.com/v1` exactly |
-| `401 Unauthorized` | Key is wrong, expired, or still has `<API_KEY>` in it | Replace the placeholder with a real key |
-| `400` mentioning the model | Model id is misspelled, or the vendor prefix was dropped | Copy the id from `/models/` verbatim |
-| Model missing from the picker | The id is not enabled for your plan | Check the plan, see [models & pricing](/models/) |
-| Requests work, replies stream oddly | Streaming is on but the client expects a single response | Turn off streaming in the model entry |
+| `404` on every request | `url` is missing `/chat/completions` | Use the full path: `https://gurouter.com/v1/chat/completions` |
+| `401 Unauthorized` | Wrong key, or the secret id in `apiKey` does not exist | Re-store the secret and match the id exactly |
+| `400` mentioning the model | Model id misspelled, vendor prefix dropped, or not enabled for your plan | Copy the id from `/models/` verbatim |
+| Model missing from the picker | The entry failed to parse, so VS Code skipped it | Check `settings.json` for a JSON syntax error |
+| Works on short prompts, fails on long ones | `maxInputTokens` is higher than the model's real context | Set it to the real size from the models page |
+| Tool calls fail or arrive malformed | `toolCalling` is set for a model that does not support it | Set it to the model's actual capability |
+| Chat window does not see the new entry | Settings not reloaded | `Developer: Reload Window` |
 
 <Aside type="tip">
 	The model id is case-sensitive and includes the vendor prefix. `Qwen/Qwen3.8-Max` and
 	`qwen/qwen3.8-max` are not the same id, and a gateway that has the first will return a
-	`400` for the second rather than a "not found".
+	`400` for the second rather than a "not found". The same applies to the secret id in
+	`apiKey` — it is an opaque string, so copy it rather than retyping it.
 </Aside>
 
 <Aside type="caution" title="Your key stays yours">
-	BYOK means the key is sent from your machine to the gateway directly. Nothing is
-	inserted into the model's prompt, and the key is not written into the chat history. Do
-	not paste a production key into a shared or committed settings file — keep it in
-	`settings.local.json`, which is git-ignored.
+	BYOK means the key is sent from your machine to the gateway directly. Nothing is inserted
+	into the model's prompt, and the key is not written into the chat history. Keep it behind
+	`${input:chat.lm.secret.…}` rather than a literal, so it never lands in a file that could
+	be committed.
 </Aside>
 
 ## Related

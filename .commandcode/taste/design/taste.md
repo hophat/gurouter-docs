@@ -13,6 +13,26 @@
   color, light and dark token sets, a fallback path for older browsers) and reported the
   rationale without being asked. Weak signal, but consistent across two redesigns. Confidence: 0.45
 
+## Writing docs pages (agent-executed, weak signal — the user sent copy, the agent wrote the page)
+
+- Lead with what a reader has to remember, not with the feature. The accepted shape was
+  video → the three values that actually matter → short numbered setup → an independent
+  verification step → an error table → related pages. Confidence: 0.45
+- Put a verification step *before* the troubleshooting table, not after. If the same key and
+  base URL work outside the client, the failure is provably the client's configuration, and
+  the table below becomes a list of configuration mistakes instead of a list of mysteries.
+  The agent called this out as a deliberate ordering choice. Confidence: 0.45
+- Write the error table from what the system actually returns, and call out the rows that
+  contradict the reader's intuition. A wrong model id returns `400`, not `404` — worth
+  stating explicitly precisely because "model not found" is what everyone expects and it is
+  wrong. Confidence: 0.45
+- One tip aside for the gotcha that produces a misleading error, not a list of gotchas. A
+  lowercased copy-paste of a case-sensitive, vendor-prefixed model id yields an error that
+  reads like a missing model. Confidence: 0.4
+- A caution aside stating the security property plainly — the key goes from the user's
+  machine to the gateway, is never written into chat history, and belongs in
+  git-ignored `settings.local.json` rather than a shared config. Confidence: 0.4
+
 ## Wordmark / brand color (agent-executed, weak signal)
 
 - A gradient logo demands a gradient wordmark, not one accent hue pulled from it. Picking

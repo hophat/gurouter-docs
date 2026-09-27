@@ -25,7 +25,8 @@
   safe by default instead (timestamped backup, clean-tree check, build, route + live-DOM
   verification) and report the evidence afterwards. The user asked for the irreversible
   part up front and the full sequence ran to completion without objection. Confidence: 0.6
-- The converse holds, twice now: a request that does *not* say deploy ends at the commit.
+- The closing "need me to push + deploy?" question gets a two-word answer — "push & deploy" — that is authorization for both steps at once, in the same terse register the original brief used. Run the whole path without pausing; the offer was the confirmation checkpoint. Confidence: 0.55
+- The converse holds, three times now: a request that does *not* say deploy ends at the commit.
   Both times the agent committed, stated plainly that it stopped short of deploying because
   it was not asked, and offered the push. So the trigger for deploying is the word, not the
   project being deployable. Confidence: 0.55
