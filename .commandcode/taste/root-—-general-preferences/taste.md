@@ -9,7 +9,9 @@
   to something outside the agent's scope — reported in one line as "not mine to fix today, but
   know before it becomes a problem", with no offer to go dig. Scope discipline plus a heads-up. Confidence: 0.5
 - Final sign-off is a compact evidence block, not prose: the last few commit subjects, a
-  before→after cleanup table, and the routes/lines the user needs to reproduce it themselves. Confidence: 0.45
+  before→after cleanup table, and the routes/lines the user needs to reproduce it themselves.
+  It closes with one explicit sentence that nothing is left outstanding — an unstated
+  completion reads back to the user as an open question. Confidence: 0.5
 - Follow-ups are terse status checks ("done chưa ?", "merge & close task, clean") rather than new
   instructions. Read them as "give me the state of the work / finish the housekeeping", so a good
   reply states what is done, what is not, and where things stand in the repo (committed / pushed /

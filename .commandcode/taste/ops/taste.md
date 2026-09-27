@@ -103,9 +103,18 @@
   clean — reported as a before→after table. Holding the newest backup back and handing over an
   `ssh … rm -rf` line is the right call only when cleanup is the agent's own idea, not when
   cleanup is the instruction. Confidence: 0.5
+- The learning/taste files under `.commandcode/taste/` live *inside* the project repo and are
+  written by the system as the session runs, so a final state check will always show them
+  dirty. This is expected: commit and push them with the work rather than treating them as
+  local-only artifacts, and note it in one line ("the taste files picked up a new note, I
+  committed that too"). The user asked only to close the task and raised no objection to
+  the unprompted commit-and-push of the notes.
 - "close task" means the agent's own internal todo list, not an issue tracker. The user chains
   VCS, task-list and environment verbs into one line and expects all of them done in the same
-  pass; leaving the todo list open reads as an unfinished job. Confidence: 0.5
+  pass; leaving the todo list open reads as an unfinished job. It also covers the background
+  shell/monitor task registry — enumerate it with stopped tasks included, not just the todo
+  list — and the repo tree. Then state plainly that the registry is empty and nothing is open.
+  Confidence: 0.55
 
 ## Post-deploy verification
 

@@ -32,6 +32,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Agent Setup', slug: 'getting-started/agents' },
 						{ label: 'CLI Setup (CC Switch)', slug: 'getting-started/cli-setup' },
+						{ label: 'VS Code (BYOK)', slug: 'getting-started/vscode' },
 					],
 				},
 				{

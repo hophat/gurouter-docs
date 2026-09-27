@@ -1,0 +1,121 @@
+---
+title: VS Code with your own API key
+description: Connect GuRouter to VS Code Chat as an OpenAI-compatible endpoint, using your own GuRouter API key. Includes the exact settings, a working model id, and how to fix common errors.
+---
+
+import { Aside, LinkButton, Steps } from '@astrojs/starlight/components';
+import YouTubeEmbed from '../../../components/YouTubeEmbed.astro';
+import SpecList from '../../../components/SpecList.astro';
+
+VS Code Chat can talk to any OpenAI-compatible endpoint. Point it at GuRouter and you get
+every model in the [catalog](/models/) — a Claude model, a DeepSeek model, whatever the task
+needs — behind one key, and you can switch between them without leaving VS Code.
+
+<YouTubeEmbed
+	id="kJAI0i6TCO4"
+	si="788teQ-Oeww9GHVi"
+	title="GU Router + VS Code: Use Any AI Model with Your Own API Key | BYOK Setup"
+/>
+
+<LinkButton
+	href="https://www.youtube.com/watch?v=kJAI0i6TCO4"
+	variant="minimal"
+	icon="external"
+>
+	Watch on YouTube
+</LinkButton>
+
+## What you need
+
+- A GuRouter API key. If you do not have one yet, ask your account owner for it.
+- VS Code with the Chat view. BYOK support ships in VS Code 1.101 and later on the
+  [OpenAI-compatible provider](https://code.visualstudio.com/docs/copilot/customization/language-models)
+  path.
+
+## The settings
+
+Three values, and every one of them is copied from this page.
+
+<SpecList
+	rows={[
+		{ label: 'Base URL', value: 'https://gurouter.com/v1' },
+		{ label: 'API key', value: 'your GuRouter key' },
+		{ label: 'Model', value: 'an id from /models/' },
+	]}
+/>
+
+The base URL ends in `/v1`. VS Code appends `/chat/completions` to whatever you give it, so
+`https://gurouter.com/v1` becomes `https://gurouter.com/v1/chat/completions`. Giving it
+`https://gurouter.com` instead produces a 404, which is the single most common cause of a
+"connection failed" here.
+
+## Set it up
+
+<Steps>
+
+1. **Open the BYOK settings.** Run `Preferences: Configure Chat Customizations` from the
+   command palette, or open `chatModels` in `settings.json`.
+
+2. **Add GuRouter as a provider.** Point the base URL at `https://gurouter.com/v1` and
+   paste your GuRouter key where it asks for an API key.
+
+3. **Add a model.** The model id is the exact string from the
+   [models page](/models/) — including any vendor prefix, for example
+   `deepseek/deepseek-v4-flash`. A prefix that is part of the id must not be dropped.
+
+4. **Send a message.** Pick the model from the Chat model picker and send anything. If the
+   reply comes back, the wiring is correct.
+
+</Steps>
+
+## Verify it outside VS Code
+
+Worth doing once before debugging VS Code. If the same key and base URL work here, the
+problem is in VS Code's configuration rather than in the gateway.
+
+```bash
+curl https://gurouter.com/v1/chat/completions \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek/deepseek-v4-flash",
+    "messages": [{ "role": "user", "content": "Say hello in one sentence." }]
+  }'
+```
+
+The list of model ids your key can actually reach comes from the gateway:
+
+```bash
+curl https://gurouter.com/v1/models \
+  -H "Authorization: Bearer <API_KEY>"
+```
+
+## When it does not work
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `404` on every request | Base URL is missing `/v1`, or already ends in `/chat/completions` | Set it to `https://gurouter.com/v1` exactly |
+| `401 Unauthorized` | Key is wrong, expired, or still has `<API_KEY>` in it | Replace the placeholder with a real key |
+| `400` mentioning the model | Model id is misspelled, or the vendor prefix was dropped | Copy the id from `/models/` verbatim |
+| Model missing from the picker | The id is not enabled for your plan | Check the plan, see [models & pricing](/models/) |
+| Requests work, replies stream oddly | Streaming is on but the client expects a single response | Turn off streaming in the model entry |
+
+<Aside type="tip">
+	The model id is case-sensitive and includes the vendor prefix. `Qwen/Qwen3.8-Max` and
+	`qwen/qwen3.8-max` are not the same id, and a gateway that has the first will return a
+	`400` for the second rather than a "not found".
+</Aside>
+
+<Aside type="caution" title="Your key stays yours">
+	BYOK means the key is sent from your machine to the gateway directly. Nothing is
+	inserted into the model's prompt, and the key is not written into the chat history. Do
+	not paste a production key into a shared or committed settings file — keep it in
+	`settings.local.json`, which is git-ignored.
+</Aside>
+
+## Related
+
+- [Models & pricing](/models/) — every model, its price, and which plan unlocks it
+- [Agent setup](/getting-started/agents/) — the same gateway from curl, Python, and Node
+- [CLI tools with CC Switch](/getting-started/cli-setup/) — the same idea for Claude Code,
+  Codex, and Gemini CLI

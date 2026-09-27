@@ -20,6 +20,10 @@ const ROUTES: Record<string, { method: string; path: string; state: 'live' | 'pl
 		{ method: 'POST', path: '/v1/messages', state: 'live' },
 		{ method: 'POST', path: '/v1/responses', state: 'live' },
 	],
+	'/getting-started/vscode/': [
+		{ method: 'GET', path: '/v1/models', state: 'live' },
+		{ method: 'POST', path: '/v1/chat/completions', state: 'live' },
+	],
 	'/getting-started/cli-setup/': [
 		{ method: 'POST', path: '/v1/messages', state: 'live' },
 		{ method: 'POST', path: '/v1/responses', state: 'live' },
